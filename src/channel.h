@@ -15,7 +15,7 @@ typedef struct
 	int nsfw;
 	uint64_t last_message_id;
 	uint16_t bitrate;
-	uint16_t user_limit;
+	int user_limit;
 	uint8_t rate_limit;
 	user *recipients;
 	char *icon;
@@ -122,7 +122,7 @@ int edit_message(uint64_t channel_id, uint64_t message_id, char *content, embed_
 
 int delete_message(uint64_t channel_id, uint64_t message_id);
 
-int bulk_delete_messages(uint64_t channel_id, uint64_t **message_id);
+int bulk_delete_messages(uint64_t channel_id, vec_t *message_id);
 
 int edit_channel_perms(uint64_t channel_id, uint64_t overwrite_id, int allow, int deny, char *type);
 
