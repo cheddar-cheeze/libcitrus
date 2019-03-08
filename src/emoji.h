@@ -1,7 +1,7 @@
 #ifndef EMOJI_H
 #define EMOJI_H
 #include <stdint.h>
-#include "util.h"
+#include "vector.h"
 
 typedef struct
 {

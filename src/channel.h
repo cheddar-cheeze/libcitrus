@@ -1,7 +1,7 @@
 #ifndef CHANNEL_H
 #define CHANNEL_H
 #include <stdint.h>
-#include "util.h"
+#include "vector.h"
 
 typedef struct
 {
