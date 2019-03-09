@@ -108,54 +108,43 @@ typedef struct
 } ban_t;
 
 guild_t *create_guild(guild_t *guild);
-
 guild_t *get_guild(uint64_t guild_id);
-
 guild_t *modify_guild(guild_t *guild);
-
 int delete_guild(uint64_t guild_id);
-
 vec_t *get_guild_channels(uint64_t guild_id);
-
 channel_t *create_guild_channel(uint64_t guild_id, channel_t *channel);
-
 int modify_channel_position(uint64_t guild_id, uint64_t channel_id,
 		int position);
-
 vec_t *list_guild_members(uint64_t guild_id, uint16_t limit, uint64_t after);
-
 int add_guild_member(uint64_t guild_id, uint64_t user_id, char *oauth_token,
 		char *nick, vec_t *roles, int mute, int deaf);
-
 int modfiy_guild_member(uint64_t guild_id, uint64_t user_id, vec_t *roles,
 		int mute, int deaf, uint64_t channel_id);
-
 int modify_self_nick(uint64_t guild_id, char *nick);
-
 int add_member_role(uint64_t guild_id, uint64_t user_id, uint64_t role_id);
-
 int remove_member_role(uint64_t guild_id, uint64_t user_id, uint64_t role_id);
-
 int kick_member(uint64_t guild_id, uint64_t user_id);
-
 vec_t *get_bans(uint64_t guild_id);
-
 int ban_member(uint64_t guild_id, uint64_t user_id, int delete_msg_days,
 		char *reason);
-
 int unban_member(uint64_t guild_id, uint64_t user_id);
-
 vec_t *get_guild_roles(uint64_t guild_id);
-
 role_t *create_role(uint64_t guild_id, role_t *role);
-
 vec_t *modify_role_pos(uint64_t guild_id, uint64_t role_id, int pos);
-
 role_t *modify_role(uint64_t guild_id, role_t *role);
-
 int delete_role(uint64_t guild_id, uint64_t role_id);
-
-uint8_t get_prune_count(uint64_t guild_id, uint8_t days);
-
-
+uint16_t get_prune_count(uint64_t guild_id, uint8_t days);
+uint16_t begin_guild_prune(uint64_t guild_id, uint8_t days, int compute_prune_count);
+vec_t *get_guild_voice_regions(uint64_t guild_id);
+vec_t *get_guild_invites(uint64_t guild_id);
+vec_t *get_guild_integrations(uint64_t guild_id);
+int create_guild_intergation(uint64_t guild_id, char *type, uint64_t id);
+int modify_guild_integration(uint64_t guild_id, uint64_t id, int exp_behavior,
+		int exp_grace_per, int enable_emoticons);
+int delete_guild_intergration(uint64_t guild_id, uint64_t id);
+int sync_guild_integration(uint64_t guild_id, uint64_t id);
+guildembed_t *get_guild_embed(uint64_t guild_id);
+guildembed_t *modify_guild_embed(uint64_t guild_id, guildembed_t *embed);
+invite_t *get_guild_vanity_url(uint64_t guild_id);
+//void get_guild_widget_image(uint64_t guild_id);
 #endif 
