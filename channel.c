@@ -24,6 +24,8 @@ struct channel *get_channel(struct client *client, unsigned long long channel_id
 
 	if((json_err = json_loads(response_buff, 0, json_err)) == NULL)
 		goto err;
+
+	//wow k
 err:
 	if(url != NULL)
 		free(url);
