@@ -10,7 +10,6 @@ struct channel *get_channel(struct client *client, unsigned long long channel_id
 	char *url;
 	long resp_code;
 	char *response_buff;
-	json_error_t json_err;
 
 	if((url = malloc(60)) == NULL)
 		goto err;
@@ -19,13 +18,9 @@ struct channel *get_channel(struct client *client, unsigned long long channel_id
 		goto err;
 
 	resp_code = http_request(client, url, 1, &response_buff, GET, NULL)
-	if(respcode < 200 || resp_code >= 400)
+	if(	resp_code >= 400)
 			goto err;
 
-	if((json_err = json_loads(response_buff, 0, json_err)) == NULL)
-		goto err;
-
-	//wow k
 err:
 	if(url != NULL)
 		free(url);
