@@ -1,3 +1,6 @@
+#pragma once
+#include "client.h"
+
 struct channel
 {
 	unsigned long long id;
@@ -14,7 +17,6 @@ struct channel
 	unsigned char rate_limit;
 	struct user *recipients;
 	char *icon;
-	unsigned long long icon;
 	//application_id
 	//parent_id
 	//last_pin_timestamp  REALLY FUCK 
@@ -83,7 +85,7 @@ struct attachment
 	unsigned int width;
 };
 
-struct channel *get_channel(unsigned long long channel_id);
+struct channel *get_channel(struct client *client, unsigned long long channel_id);
 int modify_channel(struct channel *channel);
 int delete_channel(unsigned long long channel_id);
 struct message *get_channel_messages(unsigned long long channel_id, unsigned long long around,  unsigned long long before, unsigned long long limit);
@@ -102,7 +104,7 @@ int delete_channel_perms(unsigned long long channel_id, unsigned long long overw
 struct invite *get_channel_invite(unsigned long long channel_id);
 int create_channel_inv(unsigned long long channel_id, unsigned long long max_age, unsigned long long max_uses, unsigned int temp, unsigned int unique);
 int trigger_typing(unsigned long long channel_id);
-struct message *get_pinned messages(unsigned long long channel_id);
+struct message *get_pinned_messages(unsigned long long channel_id);
 int pin_message(unsigned long long channel_id, unsigned long long  message_id);
 int delete_pinned_message(unsigned long long channel_id, unsigned long long message_id);
 int group_add_recip(unsigned long long channel_id, unsigned long user_id, char *access_token, char *nick);

@@ -1,33 +1,44 @@
 CC=gcc
-CFLAGS=-std=c99
-LDFLAGS=
-INCLUDE=-Isrc
-TARGET=bin/citrus
+CFLAGS=-std=c99 -Wall -Werror
+LDFLAGS=-shared -ljansson -lcurl
+TARGET=libcitrus.so
 
 default: debug
-debug: CFLAGS += -g -Wall
+debug: CFLAGS += -g
 debug: target
-release: CFLAGS += -O3 -LTO 
+release: CFLAGS += -O2 
 release: target
 	strip --strip-all $(TARGET)
 
-target: src/main.o src/proc.o src/mem.o src/widget.o src/ui.o
-	$(CC) $(CFLAGS) $(INCLUDE) -o $(TARGET) $^ $(LDFLAGS) 
+target: client.o channel.o emoji.o gateway.o guild.o invite.o user.o voice.o webhook.o
+	$(CC) $(CFLAGS) $^ -o $(TARGET) $(LDFLAGS) 
 
-main.o: src/main.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $^ -o src/$@
+client.o: client.c
+	$(CC) $(CFLAGS) -c $^ -o $@
 
-proc.o: src/proc.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $^ -o src/$@
+channel.o: channel.c
+	$(CC) $(CFLAGS) -c $^ -o $@
 
-mem.o: src/mem.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $^ -o src/$@
+emoji.o: emoji.c 
+	$(CC) $(CFLAGS) -c $^ -o $@
 
-widget.o: src/widget.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $^ -o src/$@
+gateway.o: gateway.c
+	$(CC) $(CFLAGS) -c $^ -o $@
 
-ui.o: src/ui.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $^ -o src/$@ 
+guild.o: guild.c
+	$(CC) $(CFLAGS) -c $^ -o $@
+
+invite.o: invite.c
+	$(CC) $(CFLAGS) -c $^ -o $@
+
+user.o: user.c
+	$(CC) $(CFLAGS) -c $^ -o $@
+
+voice.o: voice.c
+	$(CC) $(CFLAGS) -c $^ -o $@
+
+webhook.o: webhook.c
+	$(CC) $(CFLAGS) -c $^ -o $@
 
 clean:
-	rm src/*.o $(TARGET)
+	rm *.o $(TARGET)
