@@ -1,5 +1,7 @@
 #pragma once
 #include "client.h"
+#include "user.h"
+#include "guild.h"
 
 struct channel
 {
@@ -37,7 +39,7 @@ struct message
 	unsigned char tts;
 	unsigned char mention_everyone;
 	//mentions
-	unsigned long long mention_roles;
+	unsigned long long *mention_roles;
 	//attachments
 	//embeds
 	//reactions
