@@ -15,15 +15,12 @@
  * channel.h
  */
 
-struct channel *json_to_channel(const char *json)
+struct channel *json_to_channel(json_t *json, struct channel *rv)
 {
 	const char *key;
 	json_t *val;
-	struct channel *rv;
 	
-	rv = malloc(sizeof(struct channel));
-
-	json_object_foreach(obj, key, val)
+	json_object_foreach(json, key, val)
 	{
 		if(strcmp(key, "id") == 0)
 			rv->id = json_number_value(val);
@@ -65,8 +62,25 @@ struct channel *json_to_channel(const char *json)
 			rv->rate_limit = json_number_value(val);
 
 		if(strncmp(key, "recipients") == 0)
-			//iterate over json array and create user objects using linked lists
-			rv->recipients = json_array_value(val);
+		{
+			/*
+			 * creates a linked list of users, for the recipients member
+			 */
+
+			struct user *user;
+			size_t index;
+			json_t *item;
+
+			user = malloc(sizeof(struct user));
+			rv->recipients = user;
+			json_array_foreach(val, index, item)
+			{
+				json_to_user(item, user);
+				user->next = malloc(sizeof(struct user));
+				user = user->next
+			}
+		}
+
 
 		if(strncmp(key, "icon") == 0)
 			rv->icon = json_string_value(val);
@@ -75,15 +89,13 @@ struct channel *json_to_channel(const char *json)
 }
 
 
-struct message *json_to_message(const char *json)
+struct message *json_to_message(json_t *json, struct channel *rv)
 {
 	const char *key;
 	json_t *val;
 	struct message *rv;
 
-	rv = malloc(sizeof(struct message));
-
-	json_object_foreach(obj, key, val)
+	json_object_foreach(json, key, val)
 	{
 		if(strcmp(key, "id") == 0)
 			rv->id = json_number_value(val);
@@ -96,13 +108,17 @@ struct message *json_to_message(const char *json)
 
 		if(strcmp(key, "author") == 0)
 		{
-			//? tf
-			rv->author = json_to_user();
+			struct user *user;
+			user = malloc(struct user);
+			rv->author = json_to_user(val, user);
 		}
 
 		if(strncmp(key, "member") == 0)
-			//another json object that is wierd to parse
-			rv->member = NULL;
+		{
+			struct member *member;
+			member = malloc(sizeof(struct member));
+			rv->member = json_to_member(val, member);
+		}
 
 		if(strcmp(key, "content") == 0)
 			rv->content = json_string_value(val);
@@ -119,31 +135,89 @@ struct message *json_to_message(const char *json)
 		if(strcmp(key, "mention_everyone") == 0)
 			rv->mention_everyone = 1;
 
-		/*
-		 * if(strcmp(key, "mention_roles") == 0)
-		 * this is supposed to be able to handle mutliple role id
-		 */
+		if(strcmp(key, "mention_roles") == 0)
+		{
+			/*
+			 * nmemb will allways be one more than the actual 
+			 * count of the roles to idenfidify the end of the array
+			 * It is a null as well
+			 */
+
+			unsigned long long *roles;
+			size_t nmemb;
+			size_t index
+			json_t *item;
+
+			nmemb = json_array_size(val) + 1;
+			
+			roles = calloc(nmemb, sizeof(unsigned long long));
+			rv->mention_roles = roles;
+			json_array_foreach(val, index, item)
+				roles[index] = json_number_value(item);
+		}
 	}
 	return rv;
 }
 
 
-struct reaction *json_to_reaction(const char *json)
+struct reaction *json_to_reaction(json_t *json, struct reaction *rv)
+{
+	const char *key;
+	json_t *val;
+
+	json_object_foreach(json, key, val)
+	{
+		if(strcmp(key, "count") == 0)
+			rv->count = json_number_value(val);
+
+		if(strcmp(key, "me") == 0)
+		{
+			if(json_is_true(val))
+				rv->me = 1;
+			else(json_is_false(val))
+				rv->me = 0;
+		}
+	}
+	return rv;
+}
+
+
+struct overwrite *json_to_overwrite(json_t *json)
+{
+	const char *key;
+	json_t *val;
+
+	json_object_foreach(json, key, val)
+	{
+		if(strcmp(key, "id") == 0)
+			rv->id = json_number_value(val);
+
+		if(strcmp(key, "type" == 0))
+		{
+			if(strcmp("role", json_string_value(val)) == 0)
+				rv->type = ROLE;
+
+			if(strcmp("mention", json_string_value(val)) == 0)
+				rv->type = MENTION;
+		}
+
+		if(strcmp(key, "allowed") == 0)
+			rv->allowed = json_number_value(val);
+
+		if(strcmp(key, "denied") == 0)
+			rv->allowed = json_number_value(val);
+
+	}
+	return rv;
+}
+
+
+struct embed *json_to_embed(json_t *json)
 {
 }
 
 
-struct overwrite *json_to_overwrite(const char *json)
-{
-}
-
-
-struct embed *json_to_embed(const char *json)
-{
-}
-
-
-struct attachment *json_to_attachment(const char *json)
+struct attachment *json_to_attachment(json_t *json)
 {
 }
 
@@ -153,7 +227,7 @@ struct attachment *json_to_attachment(const char *json)
  */
 
 
-struct emoji *json_to_emoji(const char *json)
+struct emoji *json_to_emoji(json_t *json)
 {
 }
 

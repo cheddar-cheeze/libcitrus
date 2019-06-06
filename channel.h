@@ -58,20 +58,26 @@ struct reaction
 	//emoji
 };
 
+enum overwrite_type
+{
+	ROLE,
+	MEMBER
+};
+
 struct overwrite
 {
 	unsigned long long id;
-	char *type;
+	enum overwrite_type type;
 	unsigned char allow;
 	unsigned char deny;
 };
 
 struct embed
 {
-	char *title;
-	char *type;
-	char *description;
-	char *url;
+	const char *title;
+	const char *type;
+	const char *description;
+	const char *url;
 	//FUCK NON UNIX TIMESTAMPS
 	unsigned char color;
 	//more types included
