@@ -10,15 +10,15 @@ struct channel
 	unsigned long long guild_id;
 	unsigned char position;
 	//permission_overwrites
-	char *name;
-	char *topic;
+	const char *name;
+	const char *topic;
 	unsigned char nsfw;
 	unsigned long long last_message_id;
 	unsigned int bitrate;
 	unsigned char user_limit;
 	unsigned char rate_limit;
 	struct user *recipients;
-	char *icon;
+	const char *icon;
 	//application_id
 	//parent_id
 	//last_pin_timestamp  REALLY FUCK 
@@ -33,7 +33,7 @@ struct message
 	unsigned long long guild_id;
 	struct user *author;
 	struct member *member;
-	char *content;
+	const char *content;
 	//shitty timestamp >:(
 	//another shitty timestamp fuck
 	unsigned char tts;
@@ -79,16 +79,16 @@ struct embed
 	const char *description;
 	const char *url;
 	//FUCK NON UNIX TIMESTAMPS
-	unsigned char color;
+	int color;
 	//more types included
 };
 
 struct attachment
 {
 	unsigned long long id;
-	char *filename;
+	const char *filename;
 	unsigned long long size;
-	char *proxy_url;
+	const char *proxy_url;
 	unsigned int height;
 	unsigned int width;
 };

@@ -93,7 +93,6 @@ struct message *json_to_message(json_t *json, struct channel *rv)
 {
 	const char *key;
 	json_t *val;
-	struct message *rv;
 
 	json_object_foreach(json, key, val)
 	{
@@ -182,7 +181,7 @@ struct reaction *json_to_reaction(json_t *json, struct reaction *rv)
 }
 
 
-struct overwrite *json_to_overwrite(json_t *json)
+struct overwrite *json_to_overwrite(json_t *json, struct overwrite *rv)
 {
 	const char *key;
 	json_t *val;
@@ -194,10 +193,10 @@ struct overwrite *json_to_overwrite(json_t *json)
 
 		if(strcmp(key, "type" == 0))
 		{
-			if(strcmp("role", json_string_value(val)) == 0)
+			if(strcmp(json_string_value(val), "role") == 0)
 				rv->type = ROLE;
 
-			if(strcmp("mention", json_string_value(val)) == 0)
+			if(strcmp(json_string_value(val, "mention")) == 0)
 				rv->type = MENTION;
 		}
 
@@ -212,13 +211,59 @@ struct overwrite *json_to_overwrite(json_t *json)
 }
 
 
-struct embed *json_to_embed(json_t *json)
+struct embed *json_to_embed(json_t *json, struct embed *rv)
 {
+	const char *key;
+	json_t *val;
+
+	json_object_foreach(json, key, val)
+	{
+		if(strcmp(key, "title") == 0)
+			rv->title = json_string_value(val);
+
+		if(strcmp(key, "type") == 0)
+			rv->type = json_string_value(val);
+
+		if(strcmp(key, "description") == 0)
+			rv->description = json_string_value(val);
+
+		if(strcmp(key, "url") == 0)
+			rv->url = json_string_value(val);
+
+		if(strcmp(key, "color") == 0)
+			rv->color = json_number_value(val);
+	}
+	return rv;
 }
 
 
-struct attachment *json_to_attachment(json_t *json)
+struct attachment *json_to_attachment(json_t *json, struct attachment *rv)
 {
+
+	const char *key;
+	json_t *val;
+
+	json_object_foreach(json, key, val)
+	{
+		if(strcmp(key, "id") == 0)
+			rv->id = json_number_value(val);
+
+		if(strcmp(key, "filename") == 0)
+			rv->filename = json_string_value(val);
+
+		if(strcmp(key, "size") == 0)
+			rv->size = json_number_value(val);
+
+		if(strcmp(key, "proxy_url") == 0)
+			rv->proxy_url = json_string_value(val);
+
+		if(strcmp(key, "height") == 0)
+			rv->height = json_number_value(val);
+
+		if(strcmp(key, "width") == 0)
+			rv->width = json_number_value(val);
+	}
+	return rv;
 }
 
 
@@ -227,8 +272,54 @@ struct attachment *json_to_attachment(json_t *json)
  */
 
 
-struct emoji *json_to_emoji(json_t *json)
+struct emoji *json_to_emoji(json_t *json, struct emoji *rv)
 {
+	const char *key;
+	json_t *val;
+
+	json_object_foreach(json, key, val)
+	{
+		if(strcmp(key, "id") == 0)
+			rv->id = json_number_value(val);
+
+		if(strcmp(key, "name") == 0)
+			rv->name = json_string_value(val);
+
+		if(strcmp(key, "roles") == 0)
+		{
+		}
+
+		if(strcmp(key, "user") == 0)
+			rv->user = json_to_user(val);
+
+		if(strcmp(key, "req_colons") == 0)
+		{
+			if(json_is_true(val))
+				rv->req_colons = 1;
+
+			if(json_is_false(val))
+				rv->req_colons = 0;
+		}
+
+		if(strcmp(key, "managed") == 0)
+		{
+			if(json_is_true(val))
+				rv->managed = 1;
+
+			if(json_is_false(val))
+				rv->managed = 0;
+		}
+
+		if(strcmp(key, "animated"))
+		{
+			if(json_is_true(val))
+				rv->animated = 1;
+
+			if(json_is_false(val))
+				rv->animated = 0;
+		}
+	}
+	return rv;
 }
 
 
@@ -239,6 +330,7 @@ struct emoji *json_to_emoji(json_t *json)
 
 struct guild *json_to_guild(const char *json)
 {
+
 }
 
 

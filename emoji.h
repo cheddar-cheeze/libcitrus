@@ -1,10 +1,10 @@
 struct emoji
 {
 	unsigned long long id;
-	char *name;
+	const char *name;
 	unsigned long long *roles;
 	struct user *user;
-	int req_colons;
+	unsigned char req_colons;
 	unsigned char managed;
 	unsigned char animated;
 };

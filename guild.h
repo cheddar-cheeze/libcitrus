@@ -1,13 +1,13 @@
 struct guild
 {
 	unsigned long long id;
-	char *name;
-	char *icon;
-	char *splash;
+	const char *name;
+	const char *icon;
+	const char *splash;
 	unsigned char self_is_owner;
 	unsigned long long owner_id;
 	int permissions;
-	char *region;
+	const char *region;
 	unsigned long long afk_channel_id;
 	unsigned int afk_timeout;
 	unsigned char  embed_enabled;
