@@ -13,6 +13,9 @@ release: target
 target: client.o channel.o emoji.o gateway.o guild.o invite.o user.o voice.o webhook.o
 	$(CC) $(CFLAGS) $^ -o $(TARGET) $(LDFLAGS) 
 
+auth.o: auth.c
+	$(CC) $(CFLAGS) -c $^ -o $@
+
 client.o: client.c
 	$(CC) $(CFLAGS) -c $^ -o $@
 
@@ -29,6 +32,9 @@ guild.o: guild.c
 	$(CC) $(CFLAGS) -c $^ -o $@
 
 invite.o: invite.c
+	$(CC) $(CFLAGS) -c $^ -o $@
+
+json.o: json.c
 	$(CC) $(CFLAGS) -c $^ -o $@
 
 user.o: user.c
