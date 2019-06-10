@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-std=c99 -Wall -Werror
+CFLAGS=-std=c99 -Werror
 LDFLAGS=-shared -ljansson -lcurl
 TARGET=libcitrus.so
 
@@ -10,7 +10,7 @@ release: CFLAGS += -O2
 release: target
 	strip --strip-all $(TARGET)
 
-target: client.o channel.o emoji.o gateway.o guild.o invite.o user.o voice.o webhook.o
+target: auth.o client.o channel.o emoji.o gateway.o guild.o invite.o json.o user.o voice.o webhook.o
 	$(CC) $(CFLAGS) $^ -o $(TARGET) $(LDFLAGS) 
 
 auth.o: auth.c
