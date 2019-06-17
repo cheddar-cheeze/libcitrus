@@ -1,4 +1,4 @@
-typedef enum
+enum op_code
 {
 	DISPATCH,
 	HEARTBEAT,
@@ -11,7 +11,7 @@ typedef enum
 	INVALID_SESSION,
 	HELLO,
 	HEARTBEAT_ACK
-} op_code;
+};
 
 //wow need to create the websocket protocol implementation
 
