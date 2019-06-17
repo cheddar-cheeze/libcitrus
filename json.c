@@ -65,6 +65,7 @@ struct channel *json_to_channel(json_t *json, struct channel *rv)
 		{
 			/*
 			 * creates a linked list of users, for the recipients member
+			 * REVISIONS MAY OCCUR
 			 */
 
 			struct user *user;
@@ -137,6 +138,7 @@ struct message *json_to_message(json_t *json, struct channel *rv)
 		if(strcmp(key, "mention_roles") == 0)
 		{
 			/*
+			 * REVISONS MAY OCCUR
 			 * nmemb will allways be one more than the actual 
 			 * count of the roles to idenfidify the end of the array
 			 * It is a null as well
@@ -173,7 +175,7 @@ struct reaction *json_to_reaction(json_t *json, struct reaction *rv)
 		{
 			if(json_is_true(val))
 				rv->me = 1;
-			else(json_is_false(val))
+			else if(json_is_false(val))
 				rv->me = 0;
 		}
 	}
@@ -200,11 +202,11 @@ struct overwrite *json_to_overwrite(json_t *json, struct overwrite *rv)
 				rv->type = MENTION;
 		}
 
-		if(strcmp(key, "allowed") == 0)
-			rv->allowed = json_number_value(val);
+		if(strcmp(key, "allow") == 0)
+			rv->allow = json_number_value(val);
 
-		if(strcmp(key, "denied") == 0)
-			rv->allowed = json_number_value(val);
+		if(strcmp(key, "deny") == 0)
+			rv->deny = json_number_value(val);
 
 	}
 	return rv;
@@ -328,32 +330,189 @@ struct emoji *json_to_emoji(json_t *json, struct emoji *rv)
  */
 
 
-struct guild *json_to_guild(const char *json)
+struct guild *json_to_guild(json_t *json, struct guild *rv)
 {
+	const char *key;
+	json_t *val;
 
+	json_object_foreach(json, key, val)
+	{
+		if(strcmp(key, "id") == 0)
+			rv->id = json_number_value(val);
+
+		if(strcmp(key, "name") == 0)
+			rv->name = json_string_value(val);
+
+		if(strcmp(key, "icon") == 0)
+			rv->icon = json_string_value(val);
+
+		if(strcmp(key, "splash") == 0)
+			rv->splash = json_string_value(val);
+
+		if(strcmp(key, "self_is_owner") == 0)
+		{
+			if(json_is_true(val))
+				rv->self_is_owner = 1;
+
+			else if(json_is_false(val))
+				rv->self_is_owner = 0;
+		}
+
+		if(strcmp(key, "owner_id") == 0)
+			rv->owner_id = json_number_value(val);
+
+		if(strcmp(key, "permissions") == 0)
+			rv->permissions = json_number_value(val);
+
+		if(strcmp(key, "region") == 0)
+			rv->region = json_string_value(val);
+
+		if(strcmp(key, "afk_channel_id") == 0)
+			rv->afk_channel_id = json_number_value(val);
+
+		if(strcmp(key, "afk_timeout") == 0)
+			rv->afk_timeout = json_number_value(val);
+
+		if(strcmp(key, "embed_enabled") == 0)
+		{
+			if(json_is_true(val))
+				rv->embed_enabled = 1;
+			
+			else if(json_is_false(val))
+				rv->embed_enabled = 0;
+		}
+
+		if(strcmp(key, "embed_channel_id") == 0)
+			rv->embed_channel_id = json_number_value(val);
+
+		if(strcmp(key, "verification_level") == 0)
+			rv->verification_level = json_number_value(val);
+
+		if(strcmp(key, "notification_level") == 0)
+			rv->notification_level = json_number_value(val);
+
+		if(strcmp(key, "explicit_filter_level") == 0)
+			rv->explicit_filter_level = json_number_value(val);
+
+		if(strcmp(key, "roles") == 0)
+		{	
+			/*
+			 * REVISIONS MAY OCCUR
+			 * role array
+			 */
+
+			struct **role roles;
+			struct *role role;
+			size_t index;
+			size_t nmemb;
+			json_t *item;
+			
+			nmemb = json_array_size(val);
+
+			roles = calloc((nmemb + 1), sizeof(struct *role));
+			
+			json_array_foreach(val, index, item)
+			{
+				role = malloc(sizeof(struct role));
+				json_to_role(item, role);
+				roles[index] = role;
+			}
+			rv->roles = roles;
+		}
+
+		if(strcmp(key, "emojis") == 0)
+
+		{
+			/*
+			 * SAME FROM ABOVE 
+			 */
+		}
+
+		if(strcmp(key, "feature") == 0)
+		{
+		}
+
+		if(strcmp(key, "mfa_level") == 0)
+			rv->mfa_level = json_number_value(val);
+
+		if(strcmp(key, "application_id") == 0)
+			rv->application_id = json_number_value(val);
+
+		if(strcmp(key, "wiget_enabled") == 0)
+		{
+			if(json_is_true(val))
+				rv->widget_enabled = 1;
+			else if(json_is_false(val))
+				rv->widget_enabled = 0;
+		}
+
+		if(strcmp(key, "system_channel_id") == 0)
+			rv->system_channel_id = json_number_id(val);
+
+		if(strcmp(key, "joined_at") == 0)
+		{
+			//translate time
+		}
+
+		if(strcmp(key, "large") == 0)
+		{
+			if(json_is_true(val))
+				rv->large = 1;
+			else if(json_is_false(val))
+				rv->large = 0;
+		}
+
+		if(strcmp(key, "unavailible") == 0)
+		{
+			if(json_is_true(val))
+				rv->unavailible = 1;
+			else if(json_is_false(val))
+				rv->unavailible = 0;
+		}
+
+		if(strcmp(key, "member_count") == 0)
+			rv->member_count = json_number_value(val);
+
+		if(strcmp(key, "voice_states") == 0)
+		{
+		}
+
+		if(strcmp(key, "members") == 0)
+		{
+		}
+
+		if(strcmp(key, "channels") == 0)
+		{
+		}
+
+		if(strcmp(key, "presences") == 0)
+		{
+		}
+	}
+	return rv;
 }
 
 
-struct guild_embed *json_to_guild_embed(const char *json)
+struct guild_embed *json_to_guild_embed(jsont_t *json, struct guild_embed *rv)
 {
 }
 
 
-struct member *json_to_member(const char *json)
+struct member *json_to_member(json_t *json, struct member *rv)
 {
 }
 
 
-struct integration *json_to_integration(const char *json)
+struct integration *json_to_integration(json_t *json, struct integration *rv)
 {
 }
 
-struct integration_account *json_to_integration_account(const char *json)
+struct integration_account *json_to_integration_account(jsont_t *json, struct integration_account *rv)
 {
 }
 
 
-struct ban *json_to_ban(const char *json)
+struct ban *json_to_ban(json_t *json, struct ban *rv)
 {
 }
 
@@ -362,12 +521,12 @@ struct ban *json_to_ban(const char *json)
  * invite.h
  */
 
-struct invite *jsont_to_invite(const char *json)
+struct invite *jsont_to_invite(json_t json, struct invite *rv)
 {
 }
 
 
-struct invite_meta *json_to_invite_meta(const char *json)
+struct invite_meta *json_to_invite_meta(json_t *json, struct invite_meta *rv)
 {
 }
 
@@ -375,7 +534,7 @@ struct invite_meta *json_to_invite_meta(const char *json)
  * user.h
  */
 
-struct user *json_to_user(const char *json)
+struct user *json_to_user(json_t *json, struct user *rv)
 {
 }
 

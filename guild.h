@@ -1,3 +1,6 @@
+#pragma once
+#include<time.h>
+
 struct guild
 {
 	unsigned long long id;
@@ -15,24 +18,31 @@ struct guild
 	unsigned char verification_level;
 	unsigned char notification_level;
 	unsigned char explicit_filter_level;
-	struct role *roles;
-	struct emoji *emojis;
-	struct feature *features;
+	//roles array will be terminated will a null ptr
+	size_t role_count;
+	struct role **roles;
+	size_t emoji_count;
+	struct emoji **emojis;
+	size_t feature_count;
+	struct feature **features;
 	unsigned char mfa_level;
 	unsigned long long application_id;
 	unsigned char widget_enabled;
 	unsigned long long system_channel_id;
-	//joined at, shitty timestamp
+	struct tm *joined_at;
 	unsigned char large;
 	unsigned char unavailible;
-	unsigned int member_count;
-	struct voice_state *voice_states;
-	struct member *members;
-	struct channel *channels;
-	struct presence *presences;
+	size_t member_count;
+	size_t voice_state_count;
+	struct voice_state **voice_states;
+	struct member **members;
+	size_t channel_count;
+	struct channel **channels;
+	size_t presence_count;
+	struct presence **presences;
 };
 
-enum notification level
+enum notification_level
 {
 	ALL_MESSAGES,
 	ONLY_MENTIONS
@@ -47,7 +57,7 @@ enum filter_level
 
 enum mfa_level
 {
-	NONE,
+	INACTIVE, //suppoed to be none but since none & disabled is taken thats the best nextoption
 	ELEVATED
 };
 
@@ -70,7 +80,7 @@ struct member
 {
 	struct user *user;
 	char *nick;
-	struct *roles;
+	struct role *roles;
 	//shitty timestamp;
 	unsigned char deaf;
 	unsigned char mute;
