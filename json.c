@@ -1,5 +1,8 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
 #include <jansson.h>
 
 #include "channel.h"
@@ -49,41 +52,42 @@ struct channel *json_to_channel(json_t *json, struct channel *rv)
 				rv->nsfw = 0
 		}
 
-		if(strncmp(key, "last_message_id") == 0)
+		if(strcmp(key, "last_message_id") == 0)
 			rv->last_message_id = json_number_value(val);
 
-		if(strncmp(key, "bitrate") == 0)
+		if(strcmp(key, "bitrate") == 0)
 			rv->bitrate = json_number_value(val);
 
-		if(strncmp(key, "user_limit") == 0)
+		if(strcmp(key, "user_limit") == 0)
 			rv->user_limit = json_number_value(val);
 
-		if(strncmp(key, "rate_limit") == 0)
+		if(strcmp(key, "rate_limit") == 0)
 			rv->rate_limit = json_number_value(val);
 
-		if(strncmp(key, "recipients") == 0)
+		if(strcmp(key, "recipients") == 0)
 		{
 			/*
 			 * creates a linked list of users, for the recipients member
 			 * REVISIONS MAY OCCUR
 			 */
 
-			struct user *user;
 			size_t index;
+			size_t nmemb = json_array_size(val);
+			struct user **users = calloc(nmemb, sizeof(struct *user));
+			struct user *user;
 			json_t *item;
 
-			user = malloc(sizeof(struct user));
-			rv->recipients = user;
 			json_array_foreach(val, index, item)
 			{
+				user = malloc(sizeof(struct user);
 				json_to_user(item, user);
-				user->next = malloc(sizeof(struct user));
-				user = user->next
+				users[index] = user;
 			}
+			rv->users = users;
 		}
 
 
-		if(strncmp(key, "icon") == 0)
+		if(strcmp(key, "icon") == 0)
 			rv->icon = json_string_value(val);
 	}
 	return rv;
@@ -113,7 +117,7 @@ struct message *json_to_message(json_t *json, struct channel *rv)
 			rv->author = json_to_user(val, user);
 		}
 
-		if(strncmp(key, "member") == 0)
+		if(strcmp(key, "member") == 0)
 		{
 			struct member *member;
 			member = malloc(sizeof(struct member));
@@ -137,19 +141,10 @@ struct message *json_to_message(json_t *json, struct channel *rv)
 
 		if(strcmp(key, "mention_roles") == 0)
 		{
-			/*
-			 * REVISONS MAY OCCUR
-			 * nmemb will allways be one more than the actual 
-			 * count of the roles to idenfidify the end of the array
-			 * It is a null as well
-			 */
-
 			unsigned long long *roles;
-			size_t nmemb;
+			size_t nmemb = json_array_size(val);
 			size_t index
 			json_t *item;
-
-			nmemb = json_array_size(val) + 1;
 			
 			roles = calloc(nmemb, sizeof(unsigned long long));
 			rv->mention_roles = roles;
@@ -401,16 +396,14 @@ struct guild *json_to_guild(json_t *json, struct guild *rv)
 			 * role array
 			 */
 
-			struct **role roles;
-			struct *role role;
+			
 			size_t index;
-			size_t nmemb;
+			size_t nmemb = json_array_size(val);
+			struct role **roles = calloc((nmemb + 1), sizeof(struct *role));
+			struct role *role;
 			json_t *item;
-			
-			nmemb = json_array_size(val);
 
-			roles = calloc((nmemb + 1), sizeof(struct *role));
-			
+						
 			json_array_foreach(val, index, item)
 			{
 				role = malloc(sizeof(struct role));
@@ -451,7 +444,11 @@ struct guild *json_to_guild(json_t *json, struct guild *rv)
 
 		if(strcmp(key, "joined_at") == 0)
 		{
-			//translate time
+			struct tm *joined_at = malloc(sizeof(struct tm));
+
+			//2019-06-21T18:01:17.625000+00:00
+			strptime(json_string_value(val), "%Y-%m-%dT%H:%M:%s.+00:00", joined_at);
+			rv->joined_at = joined_at; 
 		}
 
 		if(strcmp(key, "large") == 0)
