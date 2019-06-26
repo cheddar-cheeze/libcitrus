@@ -73,7 +73,7 @@ struct channel *json_to_channel(json_t *json, struct channel *rv)
 
 			size_t index;
 			size_t nmemb = json_array_size(val);
-			struct user **users = calloc(nmemb, sizeof(struct *user));
+			struct user **users = calloc(nmemb, sizeof(struct user *));
 			struct user *user;
 			json_t *item;
 
@@ -287,7 +287,7 @@ struct emoji *json_to_emoji(json_t *json, struct emoji *rv)
 		}
 
 		if(strcmp(key, "user") == 0)
-			rv->user = json_to_user(val);
+			rv->user = json_to_user(val, user);
 
 		if(strcmp(key, "req_colons") == 0)
 		{
@@ -323,7 +323,6 @@ struct emoji *json_to_emoji(json_t *json, struct emoji *rv)
 /*
  * guild.h
  */
-
 
 struct guild *json_to_guild(json_t *json, struct guild *rv)
 {
@@ -391,15 +390,9 @@ struct guild *json_to_guild(json_t *json, struct guild *rv)
 
 		if(strcmp(key, "roles") == 0)
 		{	
-			/*
-			 * REVISIONS MAY OCCUR
-			 * role array
-			 */
-
-			
 			size_t index;
-			size_t nmemb = json_array_size(val);
-			struct role **roles = calloc((nmemb + 1), sizeof(struct *role));
+			rv->role_count = json_array_size(val);
+			struct role **roles = calloc(rv->role_count, sizeof(struct role *));
 			struct role *role;
 			json_t *item;
 
@@ -414,11 +407,20 @@ struct guild *json_to_guild(json_t *json, struct guild *rv)
 		}
 
 		if(strcmp(key, "emojis") == 0)
-
 		{
-			/*
-			 * SAME FROM ABOVE 
-			 */
+			size_t index;
+			rv->emoji_count = json_array_size(val);
+			struct emoji **emojis = calloc(rv->emoji_count, sizeof(struct emoji *));
+			struct emoji *emoji;
+			json_t *item;
+
+			json_array_foreach(val, index, item)
+			{
+				emoji = malloc(sizeof(struct emoji));
+				json_to_emoji(item, emoji);
+				emojis[index] = emoji;
+			}
+			rv->emojis = emojis;
 		}
 
 		if(strcmp(key, "feature") == 0)
@@ -446,8 +448,7 @@ struct guild *json_to_guild(json_t *json, struct guild *rv)
 		{
 			struct tm *joined_at = malloc(sizeof(struct tm));
 
-			//2019-06-21T18:01:17.625000+00:00
-			strptime(json_string_value(val), "%Y-%m-%dT%H:%M:%s.+00:00", joined_at);
+			
 			rv->joined_at = joined_at; 
 		}
 
@@ -472,67 +473,308 @@ struct guild *json_to_guild(json_t *json, struct guild *rv)
 
 		if(strcmp(key, "voice_states") == 0)
 		{
+			size_t index;
+			rv->voice_state_count = json_array_size(val);
+			struct voice_state **voice_states = calloc(rv->voice_state_count, sizeof(struct voice_state *));
+			struct voice_state *voice_state;
+			json_t *item;
+
+			json_array_foreach(val, index, item)
+			{
+				voice_state = malloc(sizeof(struct voice_state));
+				json_to_voice_state(item, voice_state);
+				voice_states[index] = voice_state;
+			}
+			rv->voice_states = voice_states;
 		}
 
 		if(strcmp(key, "members") == 0)
 		{
+			size_t index;
+			rv->member_count = json_array_size(val);
+			struct member **members = calloc(rv->member_count, sizeof(struct member *));
+			struct member *member;
+			json_t *item;
+
+			json_array_foreach(val, index, item)
+			{
+				member = malloc(sizeof(struct member));
+				json_to_member(item, member);
+				members[index] = member;
+			}
+			rv->members = members
+
 		}
 
 		if(strcmp(key, "channels") == 0)
 		{
+			size_t index;
+			rv->channel_count = json_array_size(val);
+			struct channel **channels = calloc(rv->channel_count, sizeof(struct channel *));
+			struct channel *channel;
+			json_t *item;
+
+			json_array_foreach
+			{
+				channel = malloc(sizeof(struct channel));
+				json_to_channel(item, channel);
+				channels[index] = channel;
+			}
+			rv->channels = channels;
 		}
 
 		if(strcmp(key, "presences") == 0)
 		{
+			size_t index;
+			rv->presence_count = json_array_size(val);
+			struct presence **presences = calloc(rv->presence_count, sizeof(struct presence *));
+			struct presence *presence;
+			json_t *item;
+
+			json_array_foreach
+			{
+				presence = malloc(sizeof(struct presence));
+				json_to_presence(item, presence);
+				presences[index] = presence;
+			}
+			rv->presences = presences;
+		}
+	}
+	return rv;
+}
+
+struct guild_embed *json_to_guild_embed(jsont_t *json, struct guild_embed *rv)
+{
+	const char *key;
+	json_t *val;
+
+	json_object_foreach(json, key, val)
+	{
+		if(strcmp(key, "enabled") == 0)
+		{
+			if(json_is_true(val))
+				rv->enabled = 1;
+			
+			else if(json_is_false(val))
+				rv->enabled = 0;
+		}
+
+		if(strcmp(key, "channel_id") == 0)
+			rv->channel_id = json_number_value(val);
+
+	}
+	return rv;
+}
+
+
+struct member *json_to_member(json_t *json, struct member *rv)
+{
+	const char *key;
+	json_t *val;
+
+	json_object_foreach(json, key, val)
+	{
+		if(strcmp(key, "user") == 0)
+			rv->user = json_to_user(val, malloc(sizeof(struct user)));
+
+		if(strcmp(key, "nick") == 0)
+			rv->nick = json_string_value(val);
+
+		if(strcmp(key, "roles") == 0)
+		{
+		}
+
+		if(strcmp(key, "joined_at") == 0)
+			rv->joined_at = timefmt(json_string_value(val), malloc(sizeof(struct tm)));
+
+		if(strcmp(key, "premium_since") == 0)
+			rv->premium_since = timefmt(json_string_value(val), malloc(sizeof(struct tm)));
+
+		if(strcmp(key "deaf") == 0)
+		{
+			if(json_is_true(val))
+				rv->deaf = 1;
+			
+			else if(json_is_false(val))
+				rv->deaf = 0;
+		}
+
+		if(strcmp(key, "mute") == 0)
+		{
+			if(json_is_true(val))
+				rv->mute = 1;
+
+			else if(json_is_false(val))
+				rv->mute = 0;
 		}
 	}
 	return rv;
 }
 
 
-struct guild_embed *json_to_guild_embed(jsont_t *json, struct guild_embed *rv)
-{
-}
-
-
-struct member *json_to_member(json_t *json, struct member *rv)
-{
-}
-
-
 struct integration *json_to_integration(json_t *json, struct integration *rv)
 {
+	const char *key;
+	json_t *val;
+
+	json_object_foreach(json, key, val)
+	{
+		if(strcmp(key, "id") == 0)
+			rv->id = json_number_value(val);
+
+		if(strcmp(key, "name") == 0)
+			rv->name = json_string_value(val);
+
+		if(strcmp(key, "type") == 0)
+			rv->type = json_string_value(val);
+
+		if(strcmp(key, "syncing") == 0)
+		{
+			if(json_is_true(val))
+				rv->syncing = 1;
+			
+			else if(json_is_false(val))
+				rv->syncing = 0;
+		}
+
+		if(strcmp(key, "role_id") == 0)
+			rv->role_id = json_number_value(val);
+
+		if(strmcp(key, "expire_behavior") == 0)
+			rv->expire_behavior = json_number_value(val);
+
+		if(strcmp(key, "expire_grace_period") == 0)
+			rv->expire_grace_period = json_number_value(val);
+
+		if(strcmp(key, "user") == 0)
+			rv->user = json_to_user(val, malloc(sizeof(struct user)));
+
+		if(strcmp(key, "account") == 0)
+			rv->account = json_to_integration_account(val, malloc(sizeof(struct integration_account)));
+
+		if(strcmp(key, "synced_at") == 0)
+			rv->synced_at = timefmt(json_string_value(val), malloc(sizeof(struct tm)));
+	}
+	return rv;
 }
 
 struct integration_account *json_to_integration_account(jsont_t *json, struct integration_account *rv)
 {
+	const char *key;
+	json_t *val;
+
+	json_object_foreach(json, key, val)
+	{
+		if(strcmp(key, "id") == 0)
+			rv->id = json_string_value(val);
+
+		if(strcmp(key, "name") == 0)
+			rv->name = json_string_value(val);
+	}
+	return rv;
 }
 
 
 struct ban *json_to_ban(json_t *json, struct ban *rv)
 {
-}
+	const char *key;
+	json_t *val;
 
+	json_object_foreach(json, key, val)
+	{
+		if(strcmp(key, "reason") == 0)
+			rv->reason = json_string_value(val);
+
+		if(strcmp(key, "user") == 0)
+			rv->user = json_to_user(val, malloc(sizeof(struct user)));
+	}
+	return rv;
+}
 
 /*
  * invite.h
  */
-
 struct invite *jsont_to_invite(json_t json, struct invite *rv)
 {
-}
+	const char *key;
+	json_t *val;
 
+	json_object_foreach(json, key, val)
+	{
+		if(strcmp(key, "code") == 0)
+			rv->code = json_string_value(val);
+
+		if(strcmp(key, "guild") == 0)
+			rv->guild = json_to_guild(val, malloc(sizeof(struct guild)));
+
+		if(strcmp(key, "channel") == 0)
+			rv->channel = json_to_channel(val, malloc(sizeof(struct channel)));
+
+		if(strcmp(key, "approximate_presence_count") == 0)
+			rv->apprx_online = json_number_value(val);
+
+		if(strcmp(key, "approximate_member_count") == 0)
+			rv->apprx_total = json_number_value(val);
+
+		
+	}
+	return rv;
+}
 
 struct invite_meta *json_to_invite_meta(json_t *json, struct invite_meta *rv)
 {
-}
+	const char *key;
+	size_t *val;
 
+	json_object_foreach(json, key, val)
+	{
+		if(strcmp(key, "inviter") == 0)
+			rv->inviter = json_to_user(val, malloc(sizeof(struct user)));
+
+		if(strcmp(key, "uses") == 0)
+			rv->uses = json_number_value(val);
+
+		if(strcmp(key, "max_uses") == 0)
+			rv->max_uses = json_number_value(val);
+
+		if(strcmp(key, "max_age") == 0)
+			rv->max_age = json_number_value(val);
+
+		if(strcmp(key, "temp") == 0)
+		{
+			if(json_is_true(val))
+				rv->temp = 1;
+			
+			else if(json_is_false(val))
+				rv->temp = 0;
+		}
+
+		if(strcmp(key, "created_at") == 0)
+			rv->created_at = timefmt(json_string_value(val), malloc(sizeof(struct tm)));
+
+		if(strcmp(key, "revoked") == 0)
+		{
+			if(json_is_true(val))
+				rv->revoked = 1;
+
+			else if(json_is_false(val))
+				rv->revoked = 0;
+		}
+	}	
+}
 /*
  * user.h
  */
-
 struct user *json_to_user(json_t *json, struct user *rv)
 {
+	const char *key;
+	json_t *val;
+
+	json_object_foreach(json, key, val)
+	{
+
+	}
+	return rv;
 }
 
 /*
