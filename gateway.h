@@ -1,3 +1,6 @@
+#ifndef gateway_h
+#define gateway_h
+
 enum op_code
 {
 	DISPATCH,
@@ -16,3 +19,4 @@ enum op_code
 //wow need to create the websocket protocol implementation
 
 extern gateway_event_callback();
+#endif

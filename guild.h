@@ -1,5 +1,8 @@
-#pragma once
-#include<time.h>
+#ifndef guild_h
+#define guild_h
+
+#include <time.h>
+#include <stdbool.h>
 
 struct guild
 {
@@ -7,13 +10,13 @@ struct guild
 	const char *name;
 	const char *icon;
 	const char *splash;
-	unsigned char self_is_owner;
+	bool self_is_owner;
 	unsigned long long owner_id;
 	int permissions;
 	const char *region;
 	unsigned long long afk_channel_id;
 	unsigned int afk_timeout;
-	unsigned char  embed_enabled;
+	bool  embed_enabled;
 	unsigned long long embed_channel_id;
 	unsigned char verification_level;
 	unsigned char notification_level;
@@ -27,11 +30,11 @@ struct guild
 	struct feature **features;
 	unsigned char mfa_level;
 	unsigned long long application_id;
-	unsigned char widget_enabled;
+	bool widget_enabled;
 	unsigned long long system_channel_id;
 	struct tm *joined_at;
-	unsigned char large;
-	unsigned char unavailible;
+	bool large;
+	bool unavailible;
 	size_t member_count;
 	size_t voice_state_count;
 	struct voice_state **voice_states;
@@ -57,7 +60,7 @@ enum filter_level
 
 enum mfa_level
 {
-	INACTIVE, //suppoed to be none but since none & disabled is taken thats the best nextoption
+	NICHT, //suppoed to be none but since none & disabled is taken thats the best nextoption
 	ELEVATED
 };
 
@@ -79,42 +82,57 @@ struct guild_embed
 struct member
 {
 	struct user *user;
-	char *nick;
-	struct role *roles;
-	//shitty timestamp;
-	unsigned char deaf;
-	unsigned char mute;
+	const char *nick;
+	size_t role_count;
+	unsigned long long *roles;
+	struct tm *joined_at;
+	struct tm *premium_since;
+	bool deaf;
+	bool mute;
 };
 
 struct integration
 {
 	unsigned long long id;
-	char *name;
-	char *type;
-	unsigned char syncing;
+	const char *name;
+	const char *type;
+	bool syncing;
 	unsigned long long role_id;
 	unsigned int expire_behavior;
 	unsigned int expire_grace_period;
 	struct user *user;
-	//account;
-	//shitty iso timestamp;
+	struct integration_account *account;
+	struct tm *synced_at;
 };
 
 struct integration_account
 {	
-	char *id;
-	char *name;
+	const char *id;
+	const char *name;
 };
+
+struct role
+{
+	unsigned long long id;
+	const char *name;
+	int color;
+	bool hoist;
+	int position;
+	int permissions;
+	bool managed;
+	bool mentionable;
+};
+
 
 struct ban
 {
-	char *reason;
+	const char *reason;
 	struct user *user;
 };
 
 struct guild *create_guild(struct guild *guild);
 struct guild *get_guild(unsigned long long guild_id);
-struct guild *modify_guild(unsigned long long *guild);
+struct guild *modify_guild(struct guild *mod_guild);
 int delete_guild(unsigned long long guild_id);
 struct channel *get_guild_channels(unsigned long long guild_id);
 struct channel *create_guild_channel(unsigned long long guild_id, struct channel *channel);
@@ -147,3 +165,4 @@ struct guild_embed *get_guild_embed(unsigned long long guild_id);
 struct guild_embed *modify_guild_embed(unsigned long long guild_id, struct guild_embed *embed);
 struct invite *get_guild_vanity_url(unsigned long long guild_id);
 //void get_guild_widget_image(uint64_t guild_id);
+#endif

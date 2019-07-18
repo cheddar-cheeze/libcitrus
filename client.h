@@ -1,6 +1,9 @@
-#pragma once
-#include "user.h"
+#ifndef client_h
+#define client_h
+
 #include <jansson.h>
+
+#include "user.h"
 
 struct client
 {
@@ -26,3 +29,4 @@ enum method
 
 
 long http_request(struct client *client, const char *url, int use_auth, char **response_buff, enum method method, const char *post_fields);
+#endif

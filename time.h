@@ -4,3 +4,4 @@
 #include <time.h>
 
 struct tm *timefmt(const char *str, struct tm *tm);
+#endif

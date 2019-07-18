@@ -1,4 +1,9 @@
-#pragma once
+#ifndef channel_h
+#define channel_h
+
+#include <time.h>
+#include <stdbool.h>
+
 #include "client.h"
 #include "user.h"
 #include "guild.h"
@@ -12,18 +17,19 @@ struct channel
 	//permission_overwrites
 	const char *name;
 	const char *topic;
-	unsigned char nsfw;
+	bool nsfw;
 	unsigned long long last_message_id;
 	unsigned int bitrate;
 	unsigned char user_limit;
 	unsigned char rate_limit;
-	struct user *recipients;
+	size_t recipient_count;
+	struct user **recipients;
 	const char *icon;
-	//application_id
-	//parent_id
-	//last_pin_timestamp  REALLY FUCK 
-	//ISO8601 TIMESTAMPS CANT THEY JUST 
-	//USE UNIX TIMESTAMPS
+	unsigned long long owner_id;
+	unsigned long long application_id;
+	unsigned long long parent_id;
+	struct tm *last_pin_timestamp;
+	
 };
 
 struct message
@@ -34,10 +40,10 @@ struct message
 	struct user *author;
 	struct member *member;
 	const char *content;
-	//shitty timestamp >:(
-	//another shitty timestamp fuck
-	unsigned char tts;
-	unsigned char mention_everyone;
+	struct tm *timestamp;
+	struct tm *edited_timestamp;
+	bool tts;
+	bool mention_everyone;
 	//mentions
 	unsigned long long *mention_roles;
 	//attachments
@@ -78,7 +84,7 @@ struct embed
 	const char *type;
 	const char *description;
 	const char *url;
-	//FUCK NON UNIX TIMESTAMPS
+	struct tm *timestamp;
 	int color;
 	//more types included
 };
@@ -117,3 +123,4 @@ int pin_message(unsigned long long channel_id, unsigned long long  message_id);
 int delete_pinned_message(unsigned long long channel_id, unsigned long long message_id);
 int group_add_recip(unsigned long long channel_id, unsigned long user_id, char *access_token, char *nick);
 int group_remove_recip(unsigned long long channel_id, unsigned long long user_id);
+#endif

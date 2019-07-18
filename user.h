@@ -1,3 +1,8 @@
+#ifndef user_h
+#define user_h
+
+#include <stdbool.h>
+
 struct user
 {
 	unsigned long long id;
@@ -21,3 +26,4 @@ int leave_guild(unsigned long long guild_id);
 struct dmchannel get_user_dms(void);
 struct dmchannel *create_dm(unsigned char recipient_id);
 struct dmchannel *create_group_dm(void); //poorly documented api call
+#endif
