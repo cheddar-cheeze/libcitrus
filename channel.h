@@ -45,10 +45,12 @@ struct message
 	bool tts;
 	bool mention_everyone;
 	//mentions
+	size_t mention_role_count;
 	unsigned long long *mention_roles;
 	//attachments
 	//embeds
-	//reactions
+	size_t reaction_count;
+	struct reaction **reactions;
 	unsigned long long nonce;
 	unsigned char pinned;
 	unsigned long long webhook_id;

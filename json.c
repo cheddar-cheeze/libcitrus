@@ -22,160 +22,139 @@
 
 struct channel *json_to_channel(json_t *json, struct channel *rv)
 {
-	const char *key;
-	json_t *val;
+	json_t *buf;
 	
-	json_object_foreach(json, key, val)
+	rv->id = json_number_value(json_object_get(json, "id"));
+	rv->type = json_number_value(json_object_get(json, "type"));
+	rv->guild_id = json_number_value(json_object_get(json, "guild_id"));
+	rv->position = json_number_value(json_object_get(json, "position"));
+	rv->name = json_string_value(json_object_get(json, "name"));
+	rv->topic = json_string_value(json_object_get(json, "topic"));
+
+	if(json_is_true(json_object_get(json, "nsfw")))
+		rv->nsfw = true;
+	//no need to check if it false since if it isnt true the member will be false by default
+
+	rv->last_message_id = json_number_value(json_object_get(json, "last_message_id"));
+	rv->bitrate = json_number_value(json_object_get(json, "bitrate"));
+	rv->user_limit = json_number_value(json_object_get(json, "user_limit"));
+	rv->rate_limit = json_number_value(json_object_get(json, "rate_limit"));
+
+	buf = json_object_get(json, "recipients");
+	if(buf != NULL)
 	{
-		if(strcmp(key, "id") == 0)
-			rv->id = json_number_value(val);
+		size_t index;
+		size_t nmemb = json_array_size(buf);
+		struct user **users = calloc(nmemb, sizeof(struct user *));
+		struct user *user;
+		json_t *item;
 
-		if(strcmp(key, "type") == 0)
-			rv->type = json_number_value(val);
-
-		if(strcmp(key, "guild_id") == 0)
-			rv->guild_id = json_number_value(val);
-
-		if(strcmp(key, "position") == 0)
-			rv->position = json_number_value(val);
-
-		if(strcmp(key, "name") == 0)
-			rv->name = json_string_value(val);
-		
-		if(strcmp(key, "topic") == 0)
-			rv->topic = json_string_value(val);
-
-		if(strcmp(key, "nsfw") == 0)
+		json_array_foreach(buf, index, item)
 		{
-			if(json_is_true(val))
-				rv->nsfw = true;
-
-			if(json_is_false(val))
-				rv->nsfw = false;
+			user = malloc(sizeof(struct user));
+			json_to_user(item, user);
+			users[index] = user;
 		}
-
-		if(strcmp(key, "last_message_id") == 0)
-			rv->last_message_id = json_number_value(val);
-
-		if(strcmp(key, "bitrate") == 0)
-			rv->bitrate = json_number_value(val);
-
-		if(strcmp(key, "user_limit") == 0)
-			rv->user_limit = json_number_value(val);
-
-		if(strcmp(key, "rate_limit") == 0)
-			rv->rate_limit = json_number_value(val);
-
-		if(strcmp(key, "recipients") == 0)
-		{
-			/*
-			 * creates a linked list of users, for the recipients member
-			 * REVISIONS MAY OCCUR
-			 */
-
-			size_t index;
-			size_t nmemb = json_array_size(val);
-			struct user **users = calloc(nmemb, sizeof(struct user *));
-			struct user *user;
-			json_t *item;
-
-			json_array_foreach(val, index, item)
-			{
-				user = malloc(sizeof(struct user));
-				json_to_user(item, user);
-				users[index] = user;
-			}
-			rv->recipients = users;
-		}
-
-
-		if(strcmp(key, "icon") == 0)
-			rv->icon = json_string_value(val);
+		rv->recipients = users;
 	}
+	
+	rv->icon = json_string_value(json_object_get(json, "icon"));
+
 	return rv;
 }
 
 
 struct message *json_to_message(json_t *json, struct message *rv)
 {
-	const char *key;
-	json_t *val;
-
-	json_object_foreach(json, key, val)
+	json_t *buf;
+		
+	rv->id = json_number_value(json_object_get(json, "id"));
+	rv->channel_id = json_number_value(json_object_get(json, "channel_id"));
+	rv->guild_id = json_number_value(json_object_get(json, "guild_id"));
+	
+	buf = json_object_get(json, "author");
+	if(buf != NULL)
 	{
-		if(strcmp(key, "id") == 0)
-			rv->id = json_number_value(val);
-
-		if(strcmp(key, "channel_id") == 0)
-			rv->channel_id = json_number_value(val);
-
-		if(strcmp(key, "guild_id") == 0)
-			rv->guild_id = json_number_value(val);
-
-		if(strcmp(key, "author") == 0)
-		{
-			struct user *user;
-			user = malloc(sizeof(struct user));
-			rv->author = json_to_user(val, user);
-		}
-
-		if(strcmp(key, "member") == 0)
-		{
-			struct member *member;
-			member = malloc(sizeof(struct member));
-			rv->member = json_to_member(val, member);
-		}
-
-		if(strcmp(key, "content") == 0)
-			rv->content = json_string_value(val);
-
-		if(strcmp(key, "tts") == 0)
-		{
-			if(json_is_true(val))
-				rv->tts = true;
-
-			if(json_is_false(val))
-				rv->tts = false;
-		}
-
-		if(strcmp(key, "mention_everyone") == 0)
-			rv->mention_everyone = 1;
-
-		if(strcmp(key, "mention_roles") == 0)
-		{
-			unsigned long long *roles;
-			size_t nmemb = json_array_size(val);
-			size_t index;
-			json_t *item;
-			
-			roles = calloc(nmemb, sizeof(unsigned long long));
-			rv->mention_roles = roles;
-			json_array_foreach(val, index, item)
-				roles[index] = json_number_value(item);
-		}
+		struct user *user;
+		user = malloc(sizeof(struct user));
+		rv->author = json_to_user(buf, user);
 	}
+	
+	buf = json_object_get(json, "member");
+	if(buf != NULL)
+	{
+		struct member *member;
+		member = malloc(sizeof(struct member));
+		rv->member = json_to_member(buf, member);
+	}
+
+	rv->content = json_string_value(json_object_get(json, "content"));
+
+	if(json_is_true(json_object_get(json, "tts")))
+		rv->tts = true;
+
+	if(json_is_true(json_object_get(json, "mention_everyone")))
+		rv->mention_everyone = true;
+
+	//mentions, this shit is wierd af user objects with partial member objects, ¯\_(ツ)_/¯
+
+	buf = json_object_get(json, "mention_roles");
+	if(buf != NULL)
+	{
+		unsigned long long *roles;
+		rv->mention_role_count = json_array_size(buf);
+		size_t index;
+		json_t *item;
+			
+		roles = calloc(rv->mention_role_count, sizeof(unsigned long long));
+		rv->mention_roles = roles;
+		json_array_foreach(buf, index, item)
+			roles[index] = json_number_value(item);
+	}
+
+	//attachments
+	//embeds
+	
+	buf = json_object_get(json, "reactions");
+	if(buf != NULL)
+	{
+		rv->reaction_count = json_array_size(buf);
+		struct reaction **reactions = calloc(rv->reaction_count, sizeof(struct reaction *));
+		struct reaction *reaction;
+		size_t index;
+		json_t *item;
+
+		json_array_foreach(buf, index, item)
+		{
+			reaction = malloc(sizeof(struct reaction));
+			reactions[index] = json_to_reaction(item, reaction);
+		}			
+
+	}
+
+	rv->nonce = json_number_value(json_object_get(json, "nonce"));
+	
+	buf = json(
+
+	//pinned
+	//webhook_id
+	//type
+	//activity
+	//application
 	return rv;
 }
 
 
 struct reaction *json_to_reaction(json_t *json, struct reaction *rv)
 {
-	const char *key;
-	json_t *val;
+	json_t *buf;
+	
+	rv->count = json_number_value(json_object_get(json, "count"));
 
-	json_object_foreach(json, key, val)
-	{
-		if(strcmp(key, "count") == 0)
-			rv->count = json_number_value(val);
-
-		if(strcmp(key, "me") == 0)
-		{
-			if(json_is_true(val))
-				rv->me = 1;
-			else if(json_is_false(val))
-				rv->me = 0;
-		}
-	}
+	buf = json_object_get(json, "me");
+	if(json_is_true(buf))
+		rv->me = true;
+	
 	return rv;
 }
 
