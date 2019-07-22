@@ -1,4 +1,4 @@
-CC=gcc
+CC=cc
 CFLAGS=-std=c99 -Werror
 LDFLAGS=-shared -ljansson -lcurl
 TARGET=libcitrus.so
@@ -35,6 +35,9 @@ invite.o: invite.c
 	$(CC) $(CFLAGS) -c $^ -o $@
 
 json.o: json.c
+	$(CC) $(CFLAGS) -c $^ -o $@
+
+time.o: time.c
 	$(CC) $(CFLAGS) -c $^ -o $@
 
 user.o: user.c

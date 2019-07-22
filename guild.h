@@ -18,17 +18,16 @@ struct guild
 	unsigned int afk_timeout;
 	bool  embed_enabled;
 	unsigned long long embed_channel_id;
-	unsigned char verification_level;
-	unsigned char notification_level;
-	unsigned char explicit_filter_level;
-	//roles array will be terminated will a null ptr
+	enum verification_level verification_level;
+	enum notification_level notification_level;
+	enum explicit_filter_level explicit_filter_level;
 	size_t role_count;
 	struct role **roles;
 	size_t emoji_count;
 	struct emoji **emojis;
 	size_t feature_count;
 	struct feature **features;
-	unsigned char mfa_level;
+	enum mfa_level mfa_level;
 	unsigned long long application_id;
 	bool widget_enabled;
 	unsigned long long system_channel_id;
@@ -51,7 +50,7 @@ enum notification_level
 	ONLY_MENTIONS
 };
 
-enum filter_level
+enum explicit_filter_level
 {
 	DISABLED,
 	MEMBER_WITHOUT_ROLES,
@@ -60,7 +59,7 @@ enum filter_level
 
 enum mfa_level
 {
-	NICHT, //suppoed to be none but since none & disabled is taken thats the best nextoption
+	_NONE,
 	ELEVATED
 };
 

@@ -1,0 +1,2 @@
+C=mandoc
+OPTS=

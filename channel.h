@@ -14,7 +14,8 @@ struct channel
 	unsigned char type;
 	unsigned long long guild_id;
 	unsigned char position;
-	//permission_overwrites
+	size_t overwrite_count;
+	struct overwrite **overwrites;
 	const char *name;
 	const char *topic;
 	bool nsfw;
@@ -44,26 +45,35 @@ struct message
 	struct tm *edited_timestamp;
 	bool tts;
 	bool mention_everyone;
-	//mentions
+	size_t mention_count;
+	struct user **mentions;
 	size_t mention_role_count;
 	unsigned long long *mention_roles;
-	//attachments
-	//embeds
+	size_t attachment_count;
+	struct attachment **attachments;
+	size_t embed_count;
+	struct embed **embeds;
 	size_t reaction_count;
 	struct reaction **reactions;
 	unsigned long long nonce;
-	unsigned char pinned;
+	bool pinned;
 	unsigned long long webhook_id;
-	unsigned char type;
-	//activity
-	//application
+	enum message_type type;
+	struct activity *activity;
+
+};
+
+struct mention
+{
+	struct user *user;
+	struct member *member;
 };
 
 struct reaction
 {
 	unsigned int count;
 	unsigned char me;
-	//emoji
+	struct emoji *emoji;
 };
 
 enum overwrite_type
@@ -80,6 +90,29 @@ struct overwrite
 	unsigned char deny;
 };
 
+enum activity_type
+{
+	JOIN = 1,
+	SPECTATE,
+	LISTEN,
+	JOIN_REQUEST
+};
+
+struct application
+{
+	unsigned long long id;
+	const char *cover_image;
+	const char *description;
+	const char *icon;
+	const char *name;
+};
+
+struct activity
+{
+	enum activity_type type;
+	const char *party_id;
+};
+
 struct embed
 {
 	const char *title;
@@ -88,7 +121,64 @@ struct embed
 	const char *url;
 	struct tm *timestamp;
 	int color;
-	//more types included
+	struct embed_footer *footer;
+	struct embed_image *image;
+	struct embed_thumbnail *thumbnail;
+	struct embed_video *video;
+	struct embed_provider *provider;
+	struct embed_author *author;
+	struct embed_fields *fields;
+};
+
+struct embed_thumbnail
+{
+	const char *url;
+	const char *proxy_url;
+	unsigned int height;
+	unsigned width;
+};
+
+struct embed_video
+{
+	const char *url;
+	unsigned int height;
+	unsigned int width;
+};
+
+struct embed_image
+{
+	const char *url;
+	const char *proxy_url;
+	unsigned int height;
+	unsigned int width;
+};
+
+struct embed_provider
+{
+	const char *name;
+	const char *url;
+};
+
+struct embed_author
+{
+	const char *name;
+	const char *url;
+	const char *icon_url;
+	const char *proxy_icon_url;
+};
+
+struct embed_footer
+{
+	const char *text;
+	const char *icon_url;
+	const char *proxy_icon_url;
+};
+
+struct embed_fields
+{
+	const char *name;
+	const char *value;
+	bool _inline;
 };
 
 struct attachment
@@ -99,6 +189,22 @@ struct attachment
 	const char *proxy_url;
 	unsigned int height;
 	unsigned int width;
+};
+
+enum message_type
+{
+	DEFAULT,
+	RECIPIENT_ADD,
+	RECIPIENT_REMOVE,
+	CALL,
+	CHANNEL_NAME_CHANGE,
+	CHANNEL_ICON_CHANGE, 
+	CHANNEL_PINNED_MESSAGE,
+	GUILD_MEMBER_JOIN,
+	USER_PREMIUM_GUID_SUBSCRIPTION,
+	USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_1,
+	USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2,
+	USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3
 };
 
 struct channel *get_channel(struct client *client, unsigned long long channel_id);

@@ -20,25 +20,25 @@
  * channel.h
  */
 
-struct channel *json_to_channel(json_t *json, struct channel *rv)
+void json_to_channel(json_t *json, struct channel *channel)
 {
 	json_t *buf;
 	
-	rv->id = json_number_value(json_object_get(json, "id"));
-	rv->type = json_number_value(json_object_get(json, "type"));
-	rv->guild_id = json_number_value(json_object_get(json, "guild_id"));
-	rv->position = json_number_value(json_object_get(json, "position"));
-	rv->name = json_string_value(json_object_get(json, "name"));
-	rv->topic = json_string_value(json_object_get(json, "topic"));
+	channel->id = json_int_value(json_object_get(json, "id"));
+	channel->type = json_int_value(json_object_get(json, "type"));
+	channel->guild_id = json_int_value(json_object_get(json, "guild_id"));
+	channel->position = json_int_value(json_object_get(json, "position"));
+	channel->name = json_string_value(json_object_get(json, "name"));
+	channel->topic = json_string_value(json_object_get(json, "topic"));
 
 	if(json_is_true(json_object_get(json, "nsfw")))
-		rv->nsfw = true;
+		channel->nsfw = true;
 	//no need to check if it false since if it isnt true the member will be false by default
 
-	rv->last_message_id = json_number_value(json_object_get(json, "last_message_id"));
-	rv->bitrate = json_number_value(json_object_get(json, "bitrate"));
-	rv->user_limit = json_number_value(json_object_get(json, "user_limit"));
-	rv->rate_limit = json_number_value(json_object_get(json, "rate_limit"));
+	channel->last_message_id = json_int_value(json_object_get(json, "last_message_id"));
+	channel->bitrate = json_int_value(json_object_get(json, "bitrate"));
+	channel->user_limit = json_int_value(json_object_get(json, "user_limit"));
+	channel->rate_limit = json_int_value(json_object_get(json, "rate_limit"));
 
 	buf = json_object_get(json, "recipients");
 	if(buf != NULL)
@@ -55,51 +55,223 @@ struct channel *json_to_channel(json_t *json, struct channel *rv)
 			json_to_user(item, user);
 			users[index] = user;
 		}
-		rv->recipients = users;
+		channel->recipients = users;
 	}
 	
-	rv->icon = json_string_value(json_object_get(json, "icon"));
-
-	return rv;
+	channel->icon = json_string_value(json_object_get(json, "icon"));
 }
 
 
-struct message *json_to_message(json_t *json, struct message *rv)
+void json_to_message(json_t *json, struct message *message)
 {
 	json_t *buf;
 		
-	rv->id = json_number_value(json_object_get(json, "id"));
-	rv->channel_id = json_number_value(json_object_get(json, "channel_id"));
-	rv->guild_id = json_number_value(json_object_get(json, "guild_id"));
+	message->id = json_int_value(json_object_get(json, "id"));
+	message->channel_id = json_int_value(json_object_get(json, "channel_id"));
+	message->guild_id = json_int_value(json_object_get(json, "guild_id"));
 	
 	buf = json_object_get(json, "author");
 	if(buf != NULL)
 	{
-		struct user *user;
-		user = malloc(sizeof(struct user));
-		rv->author = json_to_user(buf, user);
+		message->author = malloc(sizeof(struct user));
+		json_to_user(buf, message->author);
 	}
 	
 	buf = json_object_get(json, "member");
 	if(buf != NULL)
 	{
-		struct member *member;
-		member = malloc(sizeof(struct member));
-		rv->member = json_to_member(buf, member);
+		message->member = malloc(sizeof(struct member));
+		json_to_member(buf, message->member);
 	}
 
 	rv->content = json_string_value(json_object_get(json, "content"));
 
 	if(json_is_true(json_object_get(json, "tts")))
-		rv->tts = true;
+		message->tts = true;
 
 	if(json_is_true(json_object_get(json, "mention_everyone")))
-		rv->mention_everyone = true;
+		message->mention_everyone = true;
 
-	//mentions, this shit is wierd af user objects with partial member objects, ¯\_(ツ)_/¯
+	/* mentions, this shit is wierd af user objects with partial member objects, ¯\_(ツ)_/¯
+	 * my theory is that the array is structed as so
+	 * mentions: [ { user, member}, {user, member}, ....]
+	 */
 
-	buf = json_object_get(json, "mention_roles");
-	if(buf != NULL)
+	if((buf = json_object_get(json, "mentions")) != NULL)
+	{
+		message->mention_count = json_array_size(buf);
+		struct mention **mentions = calloc(message->mention_count, sizeof(struct mention *));
+		struct mention *mention;
+		size_t index;
+		json_t *item;
+		message->mentions = mentions;
+
+		json_array_foreach(buf, index, item)
+		{
+			mention = malloc(sizeof(struct mention));
+			json_to_mention(item, mention)
+			mentions[index] = mention;
+		}
+	}
+
+	if((buf = json_object_get(json, "mention_roles")) != NULL)
+	{
+		message->mention_role_count = json_array_size(buf);
+		unsigned long long *roles = calloc(message->mention_role_count, sizeof(unsigned long long));
+		size_t index;
+		json_t *item;
+		message->mention_roles = roles;
+		
+		json_array_foreach(buf, index, item)
+			roles[index] = json_int_value(item);
+	}
+
+	if((buf = json_object_get(json, "attachments")) != NULL)
+	{
+		struct attachment *attachment = malloc(sizeof(struct attachment));
+		message->attachment = json_to_attachment(buf, attachment);
+	}
+	
+	if((buf = json_object_get(json, "embeds")) != NULL)
+	{
+		message->embed_count = json_array_size(buf);
+		struct embed **embeds = calloc(rv->embed_count, sizeof(struct embed *));
+		struct embed *embed;
+		size_t index;
+		json_t *item;
+		message->embeds = embeds;
+
+		json_array_foreach(buf, index, item)
+		{
+			embed = malloc(sizeof(struct embed));
+			json_to_embed(item, embed);
+			embeds[index] = embed;
+		}
+	}
+	
+	if((buf = json_object_get(json, "reactions")) != NULL)
+	{
+		message->reaction_count = json_array_size(buf);
+		struct reaction **reactions = calloc(rv->reaction_count, sizeof(struct reaction *));
+		struct reaction *reaction;
+		size_t index;
+		json_t *item;
+		message->reactions = reactions;
+
+		json_array_foreach(buf, index, item)
+		{
+			reaction = malloc(sizeof(struct reaction));
+			json_to_reaction(item, reaction);
+			reactions[index] = reaction;
+		}			
+
+	}
+
+	message->nonce = json_int_value(json_object_get(json, "nonce"));
+	
+	if(json_is_true(json_object_get(json, "pinned")))
+		message->pinned = true;
+
+	message->webhook_id = json_int_value(json_object_get(json, "webhook_id"));
+	message->type = json_int_value(json_object(json, "type"));
+
+	if((buf = json_object_get(json, "activity")) != NULL)
+	{
+		message->activity = malloc(sizeof(struct activity));
+		json_to_activity(buf, message->activity);
+	}
+	//application
+}
+
+void json_to_activity(json_t *json struct activity *activity)
+{
+	activity->type = json_int_value(json_object_get(json, "type"));
+	activity->party_id = json_string_value(json_object_get(json, "party_id"));
+}
+
+void json_to_application(json_ *json, struct application *application)
+{
+	application->id = json_int_value(json_object_get(json, "id"));
+	application->cover = json_string_value(json_object_get(json, "cover_image"));
+	application->description = json_string_value(json_object_get(json, "description"));
+	application->icon = json_string_value(json_object_get(json, "icon"));
+	application->name = json_string_value(json_object_get(json, "name"));
+}
+
+void json_to_mention(json_t *json, struct mention *mention)
+{
+	json_t *buf;
+
+	mention->user = malloc(sizeof(struct user));
+	json_to_user(json, user);
+
+	if((buf = json_object json_object_get(json, "member")) != NULL)
+	{
+		mention->member = malloc(sizeof(struct member));
+		json_to_member(buf, mention->member);
+	}
+}
+
+void json_to_reaction(json_t *json, struct reaction *rv)
+{
+	json_t *buf;
+	
+	rv->count = json_number_value(json_object_get(json, "count"));
+
+	buf = json_object_get(json, "me");
+	if(json_is_true(buf))
+		rv->me = true;
+}
+
+
+void json_to_overwrite(json_t *json, struct overwrite *rv)
+{
+	json_t *buf;
+	rv->id = json_number_value(json_object_get(json, "id"));
+	
+	buf = json_object_get(json, "type")
+	if(strcmp(json_string_value(buf), "member") == 0)
+		rv->type = MEMBER;
+
+	rv->allow = json_number_value(jsonwobject_get(json, "allow"));
+	rv->deny = json_number_value(json_object_get(json, "deny"));
+}
+
+
+void json_to_embed(json_t *json, struct embed *embed)
+{
+	embed->title = json_string_value(json_object_get(json, "title"));
+	embed->type = json_string_value(json_object_get(json, "type"));
+	embed->description = json_string_value(json_object_get(json, "description"));
+	embed->url = json_string_value(json_object_get(json, "url"));
+	embed->color = json_number_value(json_object_get(json, "color"));
+}
+
+
+void json_to_attachment(json_t *json, struct attachment *attachment)
+{
+	attachment->id = json_number_value(json_object_get(json, "id"));
+	attachment->filename = json_string_value(json_object_get(json, "filename"));
+	attachment->size = json_number_value(json_object_get(json, "size"));
+	attachment->proxy_url = json_string_value(json_object_get(json, "proxy_url"));
+	attachment->height = json_number_value(json_object_get(json, "height"));
+	attachment->width = json_number_value(json_object_get(json, "width"));
+}
+
+
+/*
+ * emoji.h
+ */
+
+
+void json_to_emoji(json_t *json, struct emoji *rv)
+{
+	json_t *buf;
+	
+	rv->id = json_number_value(json_object_get(json, "id"));
+	rv->name = json_string_value(json_object_get(json, "name"));
+
+	if((buf = json_get_object(json, "roles")) != NULL)
 	{
 		unsigned long long *roles;
 		rv->mention_role_count = json_array_size(buf);
@@ -110,197 +282,23 @@ struct message *json_to_message(json_t *json, struct message *rv)
 		rv->mention_roles = roles;
 		json_array_foreach(buf, index, item)
 			roles[index] = json_number_value(item);
+
 	}
 
-	//attachments
-	//embeds
-	
-	buf = json_object_get(json, "reactions");
-	if(buf != NULL)
+	if((buf = json_object_get(json, "user")) != NULL)
 	{
-		rv->reaction_count = json_array_size(buf);
-		struct reaction **reactions = calloc(rv->reaction_count, sizeof(struct reaction *));
-		struct reaction *reaction;
-		size_t index;
-		json_t *item;
-
-		json_array_foreach(buf, index, item)
-		{
-			reaction = malloc(sizeof(struct reaction));
-			reactions[index] = json_to_reaction(item, reaction);
-		}			
-
+		emoji->user = malloc(sizeof(struct user));
+		json_to_user(buf, emoji->user);
 	}
+		
+	if(json_is_true(json_object_get(json, "require_colons")))
+		rv->req_colons = true;
 
-	rv->nonce = json_number_value(json_object_get(json, "nonce"));
-	
-	buf = json(
+	if(json_is_true(json_object_get(json, "managed")))
+		rv->managed = true;
 
-	//pinned
-	//webhook_id
-	//type
-	//activity
-	//application
-	return rv;
-}
-
-
-struct reaction *json_to_reaction(json_t *json, struct reaction *rv)
-{
-	json_t *buf;
-	
-	rv->count = json_number_value(json_object_get(json, "count"));
-
-	buf = json_object_get(json, "me");
-	if(json_is_true(buf))
-		rv->me = true;
-	
-	return rv;
-}
-
-
-struct overwrite *json_to_overwrite(json_t *json, struct overwrite *rv)
-{
-	const char *key;
-	json_t *val;
-
-	json_object_foreach(json, key, val)
-	{
-		if(strcmp(key, "id") == 0)
-			rv->id = json_number_value(val);
-
-		if(strcmp(key, "type") == 0)
-		{
-			if(strcmp(json_string_value(val), "role") == 0)
-				rv->type = ROLE;
-
-			if(strcmp(json_string_value(val), "mention") == 0)
-				rv->type = MEMBER;
-		}
-
-		if(strcmp(key, "allow") == 0)
-			rv->allow = json_number_value(val);
-
-		if(strcmp(key, "deny") == 0)
-			rv->deny = json_number_value(val);
-
-	}
-	return rv;
-}
-
-
-struct embed *json_to_embed(json_t *json, struct embed *rv)
-{
-	const char *key;
-	json_t *val;
-
-	json_object_foreach(json, key, val)
-	{
-		if(strcmp(key, "title") == 0)
-			rv->title = json_string_value(val);
-
-		if(strcmp(key, "type") == 0)
-			rv->type = json_string_value(val);
-
-		if(strcmp(key, "description") == 0)
-			rv->description = json_string_value(val);
-
-		if(strcmp(key, "url") == 0)
-			rv->url = json_string_value(val);
-
-		if(strcmp(key, "color") == 0)
-			rv->color = json_number_value(val);
-	}
-	return rv;
-}
-
-
-struct attachment *json_to_attachment(json_t *json, struct attachment *rv)
-{
-
-	const char *key;
-	json_t *val;
-
-	json_object_foreach(json, key, val)
-	{
-		if(strcmp(key, "id") == 0)
-			rv->id = json_number_value(val);
-
-		if(strcmp(key, "filename") == 0)
-			rv->filename = json_string_value(val);
-
-		if(strcmp(key, "size") == 0)
-			rv->size = json_number_value(val);
-
-		if(strcmp(key, "proxy_url") == 0)
-			rv->proxy_url = json_string_value(val);
-
-		if(strcmp(key, "height") == 0)
-			rv->height = json_number_value(val);
-
-		if(strcmp(key, "width") == 0)
-			rv->width = json_number_value(val);
-	}
-	return rv;
-}
-
-
-/*
- * emoji.h
- */
-
-
-struct emoji *json_to_emoji(json_t *json, struct emoji *rv)
-{
-	const char *key;
-	json_t *val;
-
-	json_object_foreach(json, key, val)
-	{
-		if(strcmp(key, "id") == 0)
-			rv->id = json_number_value(val);
-
-		if(strcmp(key, "name") == 0)
-			rv->name = json_string_value(val);
-
-		if(strcmp(key, "roles") == 0)
-		{
-		}
-
-		if(strcmp(key, "user") == 0)
-		{
-			struct user *user = malloc(sizeof(struct user));
-			rv->user = json_to_user(val, user);
-		}
-
-		if(strcmp(key, "req_colons") == 0)
-		{
-			if(json_is_true(val))
-				rv->req_colons = 1;
-
-			if(json_is_false(val))
-				rv->req_colons = 0;
-		}
-
-		if(strcmp(key, "managed") == 0)
-		{
-			if(json_is_true(val))
-				rv->managed = 1;
-
-			if(json_is_false(val))
-				rv->managed = 0;
-		}
-
-		if(strcmp(key, "animated"))
-		{
-			if(json_is_true(val))
-				rv->animated = 1;
-
-			if(json_is_false(val))
-				rv->animated = 0;
-		}
-	}
-	return rv;
+	if(json_is_true(json_object_get(json, "animated")))
+		rv->animated = true;
 }
 
 
@@ -308,13 +306,10 @@ struct emoji *json_to_emoji(json_t *json, struct emoji *rv)
  * guild.h
  */
 
-struct guild *json_to_guild(json_t *json, struct guild *rv)
+void json_to_guild(json_t *json, struct guild *rv)
 {
-	const char *key;
-	json_t *val;
+	json_t *buf;
 
-	json_object_foreach(json, key, val)
-	{
 		if(strcmp(key, "id") == 0)
 			rv->id = json_number_value(val);
 
@@ -439,10 +434,9 @@ struct guild *json_to_guild(json_t *json, struct guild *rv)
 			rv->presences = presences;
 		}
 	}
-	return rv;
 }
 
-struct guild_embed *json_to_guild_embed(json_t *json, struct guild_embed *rv)
+void json_to_guild_embed(json_t *json, struct guild_embed *rv)
 {
 	const char *key;
 	json_t *val;
@@ -462,11 +456,10 @@ struct guild_embed *json_to_guild_embed(json_t *json, struct guild_embed *rv)
 			rv->channel_id = json_number_value(val);
 
 	}
-	return rv;
 }
 
 
-struct member *json_to_member(json_t *json, struct member *rv)
+void json_to_member(json_t *json, struct member *rv)
 {
 	const char *key;
 	json_t *val;
@@ -507,11 +500,10 @@ struct member *json_to_member(json_t *json, struct member *rv)
 				rv->mute = 0;
 		}
 	}
-	return rv;
 }
 
 
-struct integration *json_to_integration(json_t *json, struct integration *rv)
+void json_to_integration(json_t *json, struct integration *rv)
 {
 	const char *key;
 	json_t *val;
@@ -554,10 +546,9 @@ struct integration *json_to_integration(json_t *json, struct integration *rv)
 		if(strcmp(key, "synced_at") == 0)
 			rv->synced_at = timefmt(json_string_value(val), malloc(sizeof(struct tm)));
 	}
-	return rv;
 }
 
-struct integration_account *json_to_integration_account(json_t *json, struct integration_account *rv)
+void json_to_integration_account(json_t *json, struct integration_account *rv)
 {
 	const char *key;
 	json_t *val;
@@ -570,11 +561,10 @@ struct integration_account *json_to_integration_account(json_t *json, struct int
 		if(strcmp(key, "name") == 0)
 			rv->name = json_string_value(val);
 	}
-	return rv;
 }
 
 
-struct ban *json_to_ban(json_t *json, struct ban *rv)
+void json_to_ban(json_t *json, struct ban *rv)
 {
 	const char *key;
 	json_t *val;
@@ -587,13 +577,12 @@ struct ban *json_to_ban(json_t *json, struct ban *rv)
 		if(strcmp(key, "user") == 0)
 			rv->user = json_to_user(val, malloc(sizeof(struct user)));
 	}
-	return rv;
 }
 
 /*
  * invite.h
  */
-struct invite *jsont_to_invite(json_t *json, struct invite *rv)
+void jsont_to_invite(json_t *json, struct invite *rv)
 {
 	const char *key;
 	json_t *val;
@@ -620,7 +609,7 @@ struct invite *jsont_to_invite(json_t *json, struct invite *rv)
 	return rv;
 }
 
-struct invite_meta *json_to_invite_meta(json_t *json, struct invite_meta *rv)
+void json_to_invite_meta(json_t *json, struct invite_meta *rv)
 {
 	const char *key;
 	json_t *val;
@@ -664,7 +653,7 @@ struct invite_meta *json_to_invite_meta(json_t *json, struct invite_meta *rv)
 /*
  * user.h
  */
-struct user *json_to_user(json_t *json, struct user *rv)
+void json_to_user(json_t *json, struct user *rv)
 {
 	const char *key;
 	json_t *val;
