@@ -70,21 +70,20 @@ void json_to_message(json_t *json, struct message *message)
 	message->channel_id = json_int_value(json_object_get(json, "channel_id"));
 	message->guild_id = json_int_value(json_object_get(json, "guild_id"));
 	
-	buf = json_object_get(json, "author");
-	if(buf != NULL)
+	//we always check to see if the object exists before allocating memory for it so that we don't waste un-needed memory
+	if((buf = json_object_get(json, "author")) != NULL)
 	{
 		message->author = malloc(sizeof(struct user));
 		json_to_user(buf, message->author);
 	}
 	
-	buf = json_object_get(json, "member");
-	if(buf != NULL)
+	if((buf = json_object_get(json, "member")) != NULL)
 	{
 		message->member = malloc(sizeof(struct member));
 		json_to_member(buf, message->member);
 	}
 
-	rv->content = json_string_value(json_object_get(json, "content"));
+	message->content = json_string_value(json_object_get(json, "content"));
 
 	if(json_is_true(json_object_get(json, "tts")))
 		message->tts = true;
@@ -135,7 +134,7 @@ void json_to_message(json_t *json, struct message *message)
 	if((buf = json_object_get(json, "embeds")) != NULL)
 	{
 		message->embed_count = json_array_size(buf);
-		struct embed **embeds = calloc(rv->embed_count, sizeof(struct embed *));
+		struct embed **embeds = calloc(message->embed_count, sizeof(struct embed *));
 		struct embed *embed;
 		size_t index;
 		json_t *item;
@@ -152,7 +151,7 @@ void json_to_message(json_t *json, struct message *message)
 	if((buf = json_object_get(json, "reactions")) != NULL)
 	{
 		message->reaction_count = json_array_size(buf);
-		struct reaction **reactions = calloc(rv->reaction_count, sizeof(struct reaction *));
+		struct reaction **reactions = calloc(message->reaction_count, sizeof(struct reaction *));
 		struct reaction *reaction;
 		size_t index;
 		json_t *item;
@@ -180,7 +179,12 @@ void json_to_message(json_t *json, struct message *message)
 		message->activity = malloc(sizeof(struct activity));
 		json_to_activity(buf, message->activity);
 	}
-	//application
+	
+	if((buf = json_object_get(json, "application")) != NULL)
+	{
+		message->application = malloc(sizeof(struct application));
+		json_to_application(buf, message->application);
+	}
 }
 
 void json_to_activity(json_t *json struct activity *activity)
@@ -212,29 +216,26 @@ void json_to_mention(json_t *json, struct mention *mention)
 	}
 }
 
-void json_to_reaction(json_t *json, struct reaction *rv)
+void json_to_reaction(json_t *json, struct reaction *reaction)
 {
-	json_t *buf;
-	
-	rv->count = json_number_value(json_object_get(json, "count"));
+	reaction->count = json_int_value(json_object_get(json, "count"));
 
-	buf = json_object_get(json, "me");
-	if(json_is_true(buf))
-		rv->me = true;
+	if(json_is_true(json_object_get(json, "me")))
+		reaction->me = true;
 }
 
 
-void json_to_overwrite(json_t *json, struct overwrite *rv)
+void json_to_overwrite(json_t *json, struct overwrite *overwrite)
 {
 	json_t *buf;
-	rv->id = json_number_value(json_object_get(json, "id"));
+	overwrite->id = json_int_value(json_object_get(json, "id"));
 	
 	buf = json_object_get(json, "type")
 	if(strcmp(json_string_value(buf), "member") == 0)
-		rv->type = MEMBER;
+		overwrite->type = MEMBER;
 
-	rv->allow = json_number_value(jsonwobject_get(json, "allow"));
-	rv->deny = json_number_value(json_object_get(json, "deny"));
+	overwrite->allow = json_int_value(jsonwobject_get(json, "allow"));
+	overwrite->deny = json_int_value(json_object_get(json, "deny"));
 }
 
 
@@ -244,18 +245,18 @@ void json_to_embed(json_t *json, struct embed *embed)
 	embed->type = json_string_value(json_object_get(json, "type"));
 	embed->description = json_string_value(json_object_get(json, "description"));
 	embed->url = json_string_value(json_object_get(json, "url"));
-	embed->color = json_number_value(json_object_get(json, "color"));
+	embed->color = json_int_value(json_object_get(json, "color"));
 }
 
 
 void json_to_attachment(json_t *json, struct attachment *attachment)
 {
-	attachment->id = json_number_value(json_object_get(json, "id"));
+	attachment->id = json_int_value(json_object_get(json, "id"));
 	attachment->filename = json_string_value(json_object_get(json, "filename"));
-	attachment->size = json_number_value(json_object_get(json, "size"));
+	attachment->size = json_int_value(json_object_get(json, "size"));
 	attachment->proxy_url = json_string_value(json_object_get(json, "proxy_url"));
-	attachment->height = json_number_value(json_object_get(json, "height"));
-	attachment->width = json_number_value(json_object_get(json, "width"));
+	attachment->height = json_int_value(json_object_get(json, "height"));
+	attachment->width = json_int_value(json_object_get(json, "width"));
 }
 
 
@@ -264,24 +265,24 @@ void json_to_attachment(json_t *json, struct attachment *attachment)
  */
 
 
-void json_to_emoji(json_t *json, struct emoji *rv)
+void json_to_emoji(json_t *json, struct emoji *emoji)
 {
 	json_t *buf;
 	
-	rv->id = json_number_value(json_object_get(json, "id"));
-	rv->name = json_string_value(json_object_get(json, "name"));
+	emoji->id = json_int_value(json_object_get(json, "id"));
+	emoji->name = json_string_value(json_object_get(json, "name"));
 
 	if((buf = json_get_object(json, "roles")) != NULL)
 	{
 		unsigned long long *roles;
-		rv->mention_role_count = json_array_size(buf);
+		emoji->role_count = json_array_size(buf);
 		size_t index;
 		json_t *item;
 			
-		roles = calloc(rv->mention_role_count, sizeof(unsigned long long));
-		rv->mention_roles = roles;
+		roles = calloc(emoji->role_count, sizeof(unsigned long long));
+		emoji->roles = roles;
 		json_array_foreach(buf, index, item)
-			roles[index] = json_number_value(item);
+			roles[index] = json_int_value(item);
 
 	}
 
@@ -292,13 +293,13 @@ void json_to_emoji(json_t *json, struct emoji *rv)
 	}
 		
 	if(json_is_true(json_object_get(json, "require_colons")))
-		rv->req_colons = true;
+		emoji->req_colons = true;
 
 	if(json_is_true(json_object_get(json, "managed")))
-		rv->managed = true;
+		emoji->managed = true;
 
 	if(json_is_true(json_object_get(json, "animated")))
-		rv->animated = true;
+		emoji->animated = true;
 }
 
 
@@ -306,307 +307,225 @@ void json_to_emoji(json_t *json, struct emoji *rv)
  * guild.h
  */
 
-void json_to_guild(json_t *json, struct guild *rv)
+void json_to_guild(json_t *json, struct guild *guild)
 {
 	json_t *buf;
 
-		if(strcmp(key, "id") == 0)
-			rv->id = json_number_value(val);
+	guild->id = json_int_value(json_object_get(json, "id"));
+	guild->name = json_string_value(json_object_get(json, "name"));
+	guild->icon = json_string_value(json_object_get(json, "icon"));
+	guild->splash = json_string_value(json_object_get(json, "splash"));
 
-		if(strcmp(key, "name") == 0)
-			rv->name = json_string_value(val);
+	if(json_is_true(json_object_get(json, "owner")))
+		guild->self_is_owner = true;
 
-		if(strcmp(key, "icon") == 0)
-			rv->icon = json_string_value(val);
 
-		if(strcmp(key, "splash") == 0)
-			rv->splash = json_string_value(val);
+	guild->owner_id = json_int_value(json_object_get(json, "owner_id"));
+	guild->permissions = json_int_value(json_object_get(json, "permissions"));
+	guild->region = json_string_value(json_object_get(json, "region"));
+	guild->afk_channel_id = json_int_value(json_object_get(json, "afk_chanel_id"));
+	guild->afk_timeout = json_int_value(json_object_get(json, "afk_timeout"));
 
-		if(strcmp(key, "self_is_owner") == 0)
-		{
-			if(json_is_true(val))
-				rv->self_is_owner = 1;
-
-			else if(json_is_false(val))
-				rv->self_is_owner = 0;
-		}
-
-		if(strcmp(key, "owner_id") == 0)
-			rv->owner_id = json_number_value(val);
-
-		if(strcmp(key, "permissions") == 0)
-			rv->permissions = json_number_value(val);
-
-		if(strcmp(key, "region") == 0)
-			rv->region = json_string_value(val);
-
-		if(strcmp(key, "afk_channel_id") == 0)
-			rv->afk_channel_id = json_number_value(val);
-
-		if(strcmp(key, "afk_timeout") == 0)
-			rv->afk_timeout = json_number_value(val);
-
-		if(strcmp(key, "embed_enabled") == 0)
-		{
-			if(json_is_true(val))
-				rv->embed_enabled = 1;
+	if(json_is_true(json_object_enabled(json, "embed_enabled")))
+		guild->embed_enabled = true;
 			
-			else if(json_is_false(val))
-				rv->embed_enabled = 0;
-		}
+	guild->embed_channel_id = json_int_value(json_object_get(json, "embed_channel_id"));
+	guild->verification_level = json_int_value(json_object_get(json, "verification_level"));
+	guild->notification_level = json_int_value(json_object_get(json, "notification_level"));
+	guild->explicit_filter_level = json_int_value(json_object_get(json, "explicit_filter_level"));
 
-		if(strcmp(key, "embed_channel_id") == 0)
-			rv->embed_channel_id = json_number_value(val);
-
-		if(strcmp(key, "verification_level") == 0)
-			rv->verification_level = json_number_value(val);
-
-		if(strcmp(key, "notification_level") == 0)
-			rv->notification_level = json_number_value(val);
-
-		if(strcmp(key, "explicit_filter_level") == 0)
-			rv->explicit_filter_level = json_number_value(val);
-
-		if(strcmp(key, "roles") == 0)
-		{	
-			size_t index;
-			rv->role_count = json_array_size(val);
-			struct role **roles = calloc(rv->role_count, sizeof(struct role *));
-			struct role *role;
-			json_t *item;
+	if((buf = json_object_get(json, "roles")) != NULL)
+	{	
+		size_t index;
+		guild->role_count = json_array_size(buf);
+		struct role **roles = calloc(guild->role_count, sizeof(struct role *));
+		struct role *role;
+		json_t *item;
 
 						
-			json_array_foreach(val, index, item)
-			{
-				role = malloc(sizeof(struct role));
-				rv->voice_states = voice_states;
-			}
-
-		if(strcmp(key, "members") == 0)
+		json_array_foreach(buf, index, item)
 		{
-			size_t index;
-			rv->member_count = json_array_size(val);
-			struct member **members = calloc(rv->member_count, sizeof(struct member *));
-			struct member *member;
-			json_t *item;
-
-			json_array_foreach(val, index, item)
-			{
-				member = malloc(sizeof(struct member));
-				json_to_member(item, member);
-				members[index] = member;
-			}
-			rv->members = members;
-
+			role = malloc(sizeof(struct role));
+			guild->voice_states = voice_states;
 		}
+	}
 
-		if(strcmp(key, "channels") == 0)
+	if((buf = json_object_get(json, "members")) != NULL)
+	{
+		size_t index;
+		guild->member_count = json_array_size(buf);
+		struct member **members = calloc(guild->member_count, sizeof(struct member *));
+		struct member *member;
+		json_t *item;
+
+		json_array_foreach(buf, index, item)
 		{
-			size_t index;
-			rv->channel_count = json_array_size(val);
-			struct channel **channels = calloc(rv->channel_count, sizeof(struct channel *));
-			struct channel *channel;
-			json_t *item;
-
-			json_array_foreach(val, index, item)
-			{
-				channel = malloc(sizeof(struct channel));
-				json_to_channel(item, channel);
-				channels[index] = channel;
-			}
-			rv->channels = channels;
+			member = malloc(sizeof(struct member));
+			json_to_member(item, member);
+			members[index] = member;
 		}
+		guild->members = members;
 
-		if(strcmp(key, "presences") == 0)
+	}
+
+	if((buf = json_object_get(json, "channels")) != NULL)
+	{
+		size_t index;
+		guild->channel_count = json_array_size(buf);
+		struct channel **channels = calloc(guild->channel_count, sizeof(struct channel *));
+		struct channel *channel;
+		json_t *item;
+
+		json_array_foreach(buf, index, item)
 		{
-			size_t index;
-			rv->presence_count = json_array_size(val);
-			struct presence **presences = calloc(rv->presence_count, sizeof(struct presence *));
-			struct presence *presence;
-			json_t *item;
-
-			json_array_foreach(val, index, item)
-			{
-				presence = malloc(sizeof(struct presence));
-				json_to_presence(item, presence);
-				presences[index] = presence;
-			}
-			rv->presences = presences;
+			channel = malloc(sizeof(struct channel));
+			json_to_channel(item, channel);
+			channels[index] = channel;
 		}
+		guild->channels = channels;
+	}
+
+	if((buf = json_object_get(json, "presences")) != NULL)
+	{
+		size_t index;
+		guild->presence_count = json_array_size(buf);
+		struct presence **presences = calloc(guild->presence_count, sizeof(struct presence *));
+		struct presence *presence;
+		json_t *item;
+
+		json_array_foreach(buf, index, item)
+		{
+			presence = malloc(sizeof(struct presence));
+			json_to_presence(item, presence);
+			presences[index] = presence;
+		}
+		guild->presences = presences;
 	}
 }
 
-void json_to_guild_embed(json_t *json, struct guild_embed *rv)
+void json_to_guild_embed(json_t *json, struct guild_embed *guild_embed)
 {
-	const char *key;
-	json_t *val;
 
-	json_object_foreach(json, key, val)
+	if(json_is_true(json_object_get(json, "enabled")))
+		guild_embed->enabled = true;
+	
+	guild_embed->channel_id = json_int_value(json_object_get(json, "channel_id"));
+}
+
+
+void json_to_member(json_t *json, struct member *member)
+{
+	json_t *buf;
+	
+	if((buf = json_object_get(json, "user")) != NULL)
 	{
-		if(strcmp(key, "enabled") == 0)
-		{
-			if(json_is_true(val))
-				rv->enabled = 1;
+		member->user = malloc(sizeof(struct user));
+		json_to_user(buf, member->user);
+	}
+
+	if(strcmp(key, "roles") == 0)
+	{
+	}
+	
+	if((buf = json_object_get(json, "joined_at")) != NULL)
+	{
+		member->joined_at = malloc(sizeof(struct tm));
+		timefmt(json_string_value(buf), member->joined_at);
+	}
+	
+	if((buf = json_object_get(json, "premium_since")) != NULL)
+	{
+		member->premium_since = malloc(sizeof(struct tm));
+		timefmt(json_string_value(buf), member->premium_since);
+	}
+
+	if(json_is_true(json_object_get(json, "deaf")))
+		member->deaf = true;
 			
-			else if(json_is_false(val))
-				rv->enabled = 0;
-		}
+	if(json_is_true(json_object_get(json, "mute")))
+		member->mute = true;
 
-		if(strcmp(key, "channel_id") == 0)
-			rv->channel_id = json_number_value(val);
-
-	}
 }
 
 
-void json_to_member(json_t *json, struct member *rv)
+void json_to_integration(json_t *json, struct integration *integration)
 {
-	const char *key;
-	json_t *val;
+	json_t *buf;
 
-	json_object_foreach(json, key, val)
-	{
-		if(strcmp(key, "user") == 0)
-			rv->user = json_to_user(val, malloc(sizeof(struct user)));
+	integration->id = json_int_value(json_object_get(json, "id"));
+	integration->name = json_string_value(json_object_get(json, "name"));
+	integration->type = json_string_value(json_object_get(json, "type"));
 
-		if(strcmp(key, "nick") == 0)
-			rv->nick = json_string_value(val);
-
-		if(strcmp(key, "roles") == 0)
-		{
-		}
-
-		if(strcmp(key, "joined_at") == 0)
-			rv->joined_at = timefmt(json_string_value(val), malloc(sizeof(struct tm)));
-
-		if(strcmp(key, "premium_since") == 0)
-			rv->premium_since = timefmt(json_string_value(val), malloc(sizeof(struct tm)));
-
-		if(strcmp(key, "deaf") == 0)
-		{
-			if(json_is_true(val))
-				rv->deaf = 1;
+	if(json_is_true(json_object_get(json, "syncing")))
+		integration->syncing = true;
 			
-			else if(json_is_false(val))
-				rv->deaf = 0;
-		}
+	integration->role_id = json_int_value(json_object_get(json, "role_id"));
+	integration->expire_behavior = json_int_value(json_object_get(json, "expire_behavior"));
+	integration->expire_grace_period = json_int_value(json_object_get(json,"expire_grace_period"));
 
-		if(strcmp(key, "mute") == 0)
-		{
-			if(json_is_true(val))
-				rv->mute = 1;
+	if((buf = json_object_get(json, "user")) != NULL)
+	{
+		integration->user = malloc(sizeof(struct user));
+		json_to_user(buf, integration->user);
+	}
 
-			else if(json_is_false(val))
-				rv->mute = 0;
-		}
+	if((buf = json_object_get(json, "account")) != NULL)
+	{
+
+		integration->account = malloc(sizeof(struct integration_account);)
+		json_to_integration_account(buf, integration->account);
+	}
+	
+	if((buf = json_object_get(json, "synced_at")) != NULL)
+	{
+		integration->synced_at = malloc(sizeof(struct tm));
+		timefmt(json_string_value(buf, integration->synced_at));
 	}
 }
 
-
-void json_to_integration(json_t *json, struct integration *rv)
+void json_to_integration_account(json_t *json, struct integration_account *integration_account)
 {
-	const char *key;
-	json_t *val;
-
-	json_object_foreach(json, key, val)
-	{
-		if(strcmp(key, "id") == 0)
-			rv->id = json_number_value(val);
-
-		if(strcmp(key, "name") == 0)
-			rv->name = json_string_value(val);
-
-		if(strcmp(key, "type") == 0)
-			rv->type = json_string_value(val);
-
-		if(strcmp(key, "syncing") == 0)
-		{
-			if(json_is_true(val))
-				rv->syncing = 1;
-			
-			else if(json_is_false(val))
-				rv->syncing = 0;
-		}
-
-		if(strcmp(key, "role_id") == 0)
-			rv->role_id = json_number_value(val);
-
-		if(strcmp(key, "expire_behavior") == 0)
-			rv->expire_behavior = json_number_value(val);
-
-		if(strcmp(key, "expire_grace_period") == 0)
-			rv->expire_grace_period = json_number_value(val);
-
-		if(strcmp(key, "user") == 0)
-			rv->user = json_to_user(val, malloc(sizeof(struct user)));
-
-		if(strcmp(key, "account") == 0)
-			rv->account = json_to_integration_account(val, malloc(sizeof(struct integration_account)));
-
-		if(strcmp(key, "synced_at") == 0)
-			rv->synced_at = timefmt(json_string_value(val), malloc(sizeof(struct tm)));
-	}
-}
-
-void json_to_integration_account(json_t *json, struct integration_account *rv)
-{
-	const char *key;
-	json_t *val;
-
-	json_object_foreach(json, key, val)
-	{
-		if(strcmp(key, "id") == 0)
-			rv->id = json_string_value(val);
-
-		if(strcmp(key, "name") == 0)
-			rv->name = json_string_value(val);
-	}
+	integration_account->id = json_string_value(json_object_get(json, "id"));
+	integration_account->name = json_string_value(json_object_get(json, "name"));
 }
 
 
-void json_to_ban(json_t *json, struct ban *rv)
+void json_to_ban(json_t *json, struct ban *ban)
 {
-	const char *key;
-	json_t *val;
+	json_t *buf;
 
-	json_object_foreach(json, key, val)
+	ban->reason = json_string_value(json_object_get(json, "reason"));
+
+	if((buf = json_object_get(json, "user")) != NULL)
 	{
-		if(strcmp(key, "reason") == 0)
-			rv->reason = json_string_value(val);
-
-		if(strcmp(key, "user") == 0)
-			rv->user = json_to_user(val, malloc(sizeof(struct user)));
+		ban->user = malloc(sizeof(struct user));
+		json_to_user(buf, ban->user);
 	}
 }
 
 /*
  * invite.h
  */
-void jsont_to_invite(json_t *json, struct invite *rv)
+void jsont_to_invite(json_t *json, struct invite *invite)
 {
-	const char *key;
-	json_t *val;
+	json_t *buf;
 
-	json_object_foreach(json, key, val)
+	invite->code = json_string_value(json_object_get(json, "code"));
+
+	if((buf = json_object_get(json, "guild")) != NULL)
 	{
-		if(strcmp(key, "code") == 0)
-			rv->code = json_string_value(val);
-
-		if(strcmp(key, "guild") == 0)
-			rv->guild = json_to_guild(val, malloc(sizeof(struct guild)));
-
-		if(strcmp(key, "channel") == 0)
-			rv->channel = json_to_channel(val, malloc(sizeof(struct channel)));
-
-		if(strcmp(key, "approximate_presence_count") == 0)
-			rv->apprx_online = json_number_value(val);
-
-		if(strcmp(key, "approximate_member_count") == 0)
-			rv->apprx_total = json_number_value(val);
-
-		
+		invite->guild = malloc(sizeof(struct guild));
+		json_to_guild(buf, invite->guild);
 	}
-	return rv;
+	
+	if((buf = json_object_get(json, "channel")) != NULL)
+	{
+		invite->channel = malloc(sizeof(struct channel));
+		json_to_channel(buf, invite->channel);
+	}
+
+	invite->apprx_online = json_int_value(json_object_get(json, "approximate_presence_count"));
+	invite->apprx_total = json_int_value(json_object_get(json, "approximate_member_count"));		
 }
 
 void json_to_invite_meta(json_t *json, struct invite_meta *rv)
