@@ -8,6 +8,36 @@
 #include "user.h"
 #include "guild.h"
 
+enum activity_type
+{
+	JOIN = 1,
+	SPECTATE,
+	LISTEN,
+	JOIN_REQUEST
+};
+
+enum overwrite_type
+{
+	ROLE,
+	MEMBER
+};
+
+enum message_type
+{
+	DEFAULT,
+	RECIPIENT_ADD,
+	RECIPIENT_REMOVE,
+	CALL,
+	CHANNEL_NAME_CHANGE,
+	CHANNEL_ICON_CHANGE, 
+	CHANNEL_PINNED_MESSAGE,
+	GUILD_MEMBER_JOIN,
+	USER_PREMIUM_GUID_SUBSCRIPTION,
+	USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_1,
+	USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2,
+	USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3
+};
+
 struct channel
 {
 	unsigned long long id;
@@ -46,7 +76,7 @@ struct message
 	bool tts;
 	bool mention_everyone;
 	size_t mention_count;
-	struct user **mentions;
+	struct mention **mentions;
 	size_t mention_role_count;
 	unsigned long long *mention_roles;
 	size_t attachment_count;
@@ -60,6 +90,7 @@ struct message
 	unsigned long long webhook_id;
 	enum message_type type;
 	struct activity *activity;
+	struct application *application;
 
 };
 
@@ -76,26 +107,12 @@ struct reaction
 	struct emoji *emoji;
 };
 
-enum overwrite_type
-{
-	ROLE,
-	MEMBER
-};
-
 struct overwrite
 {
 	unsigned long long id;
 	enum overwrite_type type;
 	unsigned char allow;
 	unsigned char deny;
-};
-
-enum activity_type
-{
-	JOIN = 1,
-	SPECTATE,
-	LISTEN,
-	JOIN_REQUEST
 };
 
 struct application
@@ -189,22 +206,6 @@ struct attachment
 	const char *proxy_url;
 	unsigned int height;
 	unsigned int width;
-};
-
-enum message_type
-{
-	DEFAULT,
-	RECIPIENT_ADD,
-	RECIPIENT_REMOVE,
-	CALL,
-	CHANNEL_NAME_CHANGE,
-	CHANNEL_ICON_CHANGE, 
-	CHANNEL_PINNED_MESSAGE,
-	GUILD_MEMBER_JOIN,
-	USER_PREMIUM_GUID_SUBSCRIPTION,
-	USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_1,
-	USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2,
-	USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3
 };
 
 struct channel *get_channel(struct client *client, unsigned long long channel_id);

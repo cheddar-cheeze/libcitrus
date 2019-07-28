@@ -4,6 +4,34 @@
 #include <time.h>
 #include <stdbool.h>
 
+enum notification_level
+{
+	ALL_MESSAGES,
+	ONLY_MENTIONS
+};
+
+enum explicit_filter_level
+{
+	DISABLED,
+	MEMBER_WITHOUT_ROLES,
+	ALL_MEMBERS
+};
+
+enum mfa_level
+{
+	_NONE,
+	ELEVATED
+};
+
+enum verification_level
+{
+	NONE,
+	LOW,
+	MEDIUM,
+	HIGH,
+	VERY_HIGH
+};
+
 struct guild
 {
 	unsigned long long id;
@@ -44,32 +72,16 @@ struct guild
 	struct presence **presences;
 };
 
-enum notification_level
+struct presence
 {
-	ALL_MESSAGES,
-	ONLY_MENTIONS
-};
-
-enum explicit_filter_level
-{
-	DISABLED,
-	MEMBER_WITHOUT_ROLES,
-	ALL_MEMBERS
-};
-
-enum mfa_level
-{
-	_NONE,
-	ELEVATED
-};
-
-enum verification_level
-{
-	NONE,
-	LOW,
-	MEDIUM,
-	HIGH,
-	VERY_HIGH
+	struct user *user;
+	size_t role_count;
+	unsigned long long *roles;
+	struct activity *game;
+	unsigned long long guild_id;
+	const char *status;
+	size_t activity_count;
+	struct activity **activities;
 };
 
 struct guild_embed

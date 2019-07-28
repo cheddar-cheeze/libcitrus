@@ -11,21 +11,25 @@
 #include "voice.h"
 #include "webhook.h"
 
-struct channel *json_to_channel(json_t *json, struct channel *rv);
-struct message *json_to_message(json_t *json, struct message *rv);
-struct reaction *json_to_reaction(json_t *json, struct reaction *rv);
-struct overwrite *json_to_overwrite(json_t *json, struct overwrite *rv);
-struct embed *json_to_embed(json_t *json, struct embed *rv);
-struct attachment *json_to_attachment(json_t *json, struct attachment *rv);
-struct emoji *json_to_emoji(json_t *json, struct emoji *rv);
-struct guild *json_to_guild(json_t *json, struct guild *rv);
-struct member *json_to_member(json_t *json, struct member *rv);
-struct integration *json_to_integration(json_t *json, struct integration *rv);
-struct integration_account *json_to_integration_account(json_t *json, struct integration_account *rv);
-struct ban *json_to_ban(json_t *json, struct ban *rv);
-struct invite *json_to_invite(json_t *json, struct invite *rv);
-struct invite_meta *json_to_invite_meta(json_t *json, struct invite_meta *rv);
-struct user *json_to_user(json_t *json, struct user *rv);
+void json_to_channel(json_t *json, struct channel *channel);
+void json_to_message(json_t *json, struct message *message);
+void json_to_activity(json_t *json, struct activity *activity);
+void json_to_application(json_t *json, struct application *application);
+void json_to_mention(json_t *json, struct mention *mention);
+void json_to_reaction(json_t *json, struct reaction *reaction);
+void json_to_overwrite(json_t *json, struct overwrite *overwrite);
+void json_to_embed(json_t *json, struct embed *embed);
+void json_to_attachment(json_t *json, struct attachment *attachment);
+void json_to_emoji(json_t *json, struct emoji *emoji);
+void json_to_guild(json_t *json, struct guild *guild);
+void json_to_presence(json_t *json, struct presence *presence);
+void json_to_member(json_t *json, struct member *member);
+void json_to_integration(json_t *json, struct integration *integration);
+void json_to_integration_account(json_t *json, struct integration_account *integration_account);
+void json_to_ban(json_t *json, struct ban *ban);
+void json_to_invite(json_t *json, struct invite *invite);
+void json_to_invite_meta(json_t *json, struct invite_meta *invite_meta);
+void json_to_user(json_t *json, struct user *user);
 
 
 
