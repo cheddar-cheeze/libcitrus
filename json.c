@@ -16,6 +16,22 @@
 #include "webhook.h"
 
 
+static const char *json_strcpy(json_t *json)
+{
+	if(json_is_string(json) == false)
+		return NULL;
+		
+	size_t len = json_string_length(json);
+	char *str = malloc(len);
+
+#ifdef __BSD__
+	strlcpy(str, json_string_value(json), len);
+#else
+	strncpy(str, json_string_value(json), len);
+#endif
+	return str;
+}
+
 /*
  * channel.h
  */
@@ -28,8 +44,8 @@ void json_to_channel(json_t *json, struct channel *channel)
 	channel->type = json_integer_value(json_object_get(json, "type"));
 	channel->guild_id = json_integer_value(json_object_get(json, "guild_id"));
 	channel->position = json_integer_value(json_object_get(json, "position"));
-	channel->name = json_string_value(json_object_get(json, "name"));
-	channel->topic = json_string_value(json_object_get(json, "topic"));
+	channel->name = json_strcpy(json_object_get(json, "name"));
+	channel->topic = json_strcpy(json_object_get(json, "topic"));
 
 	if(json_is_true(json_object_get(json, "nsfw")))
 		channel->nsfw = true;
@@ -58,7 +74,7 @@ void json_to_channel(json_t *json, struct channel *channel)
 		channel->recipients = users;
 	}
 	
-	channel->icon = json_string_value(json_object_get(json, "icon"));
+	channel->icon = json_strcpy(json_object_get(json, "icon"));
 }
 
 
@@ -83,7 +99,7 @@ void json_to_message(json_t *json, struct message *message)
 		json_to_member(buf, message->member);
 	}
 
-	message->content = json_string_value(json_object_get(json, "content"));
+	message->content = json_strcpy(json_object_get(json, "content"));
 
 	if(json_is_true(json_object_get(json, "tts")))
 		message->tts = true;
@@ -201,16 +217,16 @@ void json_to_message(json_t *json, struct message *message)
 void json_to_activity(json_t *json, struct activity *activity)
 {
 	activity->type = json_integer_value(json_object_get(json, "type"));
-	activity->party_id = json_string_value(json_object_get(json, "party_id"));
+	activity->party_id = json_strcpy(json_object_get(json, "party_id"));
 }
 
 void json_to_application(json_t *json, struct application *application)
 {
 	application->id = json_integer_value(json_object_get(json, "id"));
-	application->cover_image = json_string_value(json_object_get(json, "cover_image"));
-	application->description = json_string_value(json_object_get(json, "description"));
-	application->icon = json_string_value(json_object_get(json, "icon"));
-	application->name = json_string_value(json_object_get(json, "name"));
+	application->cover_image = json_strcpy(json_object_get(json, "cover_image"));
+	application->description = json_strcpy(json_object_get(json, "description"));
+	application->icon = json_strcpy(json_object_get(json, "icon"));
+	application->name = json_strcpy(json_object_get(json, "name"));
 }
 
 void json_to_mention(json_t *json, struct mention *mention)
@@ -243,7 +259,7 @@ void json_to_overwrite(json_t *json, struct overwrite *overwrite)
 {
 	overwrite->id = json_integer_value(json_object_get(json, "id"));
 	
-	if(strcmp(json_string_value(json_object_get(json, "type")), "member") == 0)
+	if(strcmp(json_strcpy(json_object_get(json, "type")), "member") == 0)
 		overwrite->type = MEMBER;
 
 	overwrite->allow = json_integer_value(json_object_get(json, "allow"));
@@ -253,20 +269,75 @@ void json_to_overwrite(json_t *json, struct overwrite *overwrite)
 
 void json_to_embed(json_t *json, struct embed *embed)
 {
-	embed->title = json_string_value(json_object_get(json, "title"));
-	embed->type = json_string_value(json_object_get(json, "type"));
-	embed->description = json_string_value(json_object_get(json, "description"));
-	embed->url = json_string_value(json_object_get(json, "url"));
+	embed->title = json_strcpy(json_object_get(json, "title"));
+	embed->type = json_strcpy(json_object_get(json, "type"));
+	embed->description = json_strcpy(json_object_get(json, "description"));
+	embed->url = json_strcpy(json_object_get(json, "url"));
 	embed->color = json_integer_value(json_object_get(json, "color"));
 }
 
+void json_to_embed_thumbnail(json_t *json, struct embed_thumbnail *embed_thumbnail)
+{
+	embed_thumbnail->url = json_strcpy(json_object_get(json, "url"));
+	embed_thumbnail->proxy_url = json_strcpy(json_object_get(json, "proxy_url"));
+	embed_thumbnail->height = json_integer_value(json_object_get(json, "height"));
+	embed_thumbnail->width = json_integer_value(json_object_get(json, "width"));
+}
+
+void json_to_embed_video(json_t *json, struct embed_video *embed_video)
+{
+	embed_video->url = json_strcpy(json_object_get(json, "url"));
+	embed_video->height = json_integer_value(json_object_get(json, "height"));
+	embed_video->width = json_integer_value(json_object_get(json, "width"));
+
+}
+
+void json_to_embed_imgae(json_t *json, struct embed_image *embed_image)
+{
+	embed_image->url = json_strcpy(json_object_get(json, "url"));
+	embed_image->proxy_url = json_strcpy(json_object_get(json, "proxy_url"));
+	embed_image->height = json_integer_value(json_object_get(json, "height"));
+	embed_image->width = json_integer_value(json_object_get(json, "width"));
+}
+
+void json_to_embed_provider(json_t *json, struct embed_provider *embed_provider)
+{
+	embed_provider->name = json_strcpy(json_object_get(json, "name"));
+	embed_provider->url = json_strcpy(json_object_get(json, "url"));
+
+}
+
+void json_to_embed_author(json_t *json, struct embed_author *embed_author)
+{
+	embed_author->name = json_strcpy(json_object_get(json, "name"));
+	embed_author->url = json_strcpy(json_object_get(json, "url"));
+	embed_author->icon_url = json_strcpy(json_object_get(json, "icon_url"));
+	embed_author->proxy_icon_url = json_strcpy(json_object_get(json, "proxy_icon_url"));
+
+}
+
+void json_to_embed_footer(json_t *json, struct embed_footer *embed_footer)
+{
+	embed_footer->text = json_strcpy(json_object_get(json, "text"));
+	embed_footer->icon_url = json_strcpy(json_object_get(json, "icon_url"));
+	embed_footer->proxy_icon_url = json_strcpy(json_object_get(json, "proxy_icon_url"));
+}
+
+void json_to_embed_field(json_t *json, struct embed_field *embed_field)
+{
+	embed_field->name = json_strcpy(json_object_get(json, "name"));
+	embed_field->value = json_strcpy(json_object_get(json, "value"));
+
+	if(json_is_true(json_object_get(json, "inline")))
+		embed_field->_inline = true;
+}
 
 void json_to_attachment(json_t *json, struct attachment *attachment)
 {
 	attachment->id = json_integer_value(json_object_get(json, "id"));
-	attachment->filename = json_string_value(json_object_get(json, "filename"));
+	attachment->filename = json_strcpy(json_object_get(json, "filename"));
 	attachment->size = json_integer_value(json_object_get(json, "size"));
-	attachment->proxy_url = json_string_value(json_object_get(json, "proxy_url"));
+	attachment->proxy_url = json_strcpy(json_object_get(json, "proxy_url"));
 	attachment->height = json_integer_value(json_object_get(json, "height"));
 	attachment->width = json_integer_value(json_object_get(json, "width"));
 }
@@ -282,7 +353,7 @@ void json_to_emoji(json_t *json, struct emoji *emoji)
 	json_t *buf;
 	
 	emoji->id = json_integer_value(json_object_get(json, "id"));
-	emoji->name = json_string_value(json_object_get(json, "name"));
+	emoji->name = json_strcpy(json_object_get(json, "name"));
 
 	if((buf = json_object_get(json, "roles")) != NULL)
 	{
@@ -324,9 +395,9 @@ void json_to_guild(json_t *json, struct guild *guild)
 	json_t *buf;
 
 	guild->id = json_integer_value(json_object_get(json, "id"));
-	guild->name = json_string_value(json_object_get(json, "name"));
-	guild->icon = json_string_value(json_object_get(json, "icon"));
-	guild->splash = json_string_value(json_object_get(json, "splash"));
+	guild->name = json_strcpy(json_object_get(json, "name"));
+	guild->icon = json_strcpy(json_object_get(json, "icon"));
+	guild->splash = json_strcpy(json_object_get(json, "splash"));
 
 	if(json_is_true(json_object_get(json, "owner")))
 		guild->self_is_owner = true;
@@ -334,7 +405,7 @@ void json_to_guild(json_t *json, struct guild *guild)
 
 	guild->owner_id = json_integer_value(json_object_get(json, "owner_id"));
 	guild->permissions = json_integer_value(json_object_get(json, "permissions"));
-	guild->region = json_string_value(json_object_get(json, "region"));
+	guild->region = json_strcpy(json_object_get(json, "region"));
 	guild->afk_channel_id = json_integer_value(json_object_get(json, "afk_chanel_id"));
 	guild->afk_timeout = json_integer_value(json_object_get(json, "afk_timeout"));
 
@@ -444,7 +515,7 @@ void json_to_presence(json_t *json, struct presence *presence)
 	}
 
 	presence->guild_id = json_integer_value(json_object_get(json, "guild_id"));
-	presence->status = json_string_value(json_object_get(json, "status"));
+	presence->status = json_strcpy(json_object_get(json, "status"));
 
 	if((buf = json_object_get(json, "activites")) != NULL)
 	{
@@ -523,8 +594,8 @@ void json_to_integration(json_t *json, struct integration *integration)
 	json_t *buf;
 
 	integration->id = json_integer_value(json_object_get(json, "id"));
-	integration->name = json_string_value(json_object_get(json, "name"));
-	integration->type = json_string_value(json_object_get(json, "type"));
+	integration->name = json_strcpy(json_object_get(json, "name"));
+	integration->type = json_strcpy(json_object_get(json, "type"));
 
 	if(json_is_true(json_object_get(json, "syncing")))
 		integration->syncing = true;
@@ -555,8 +626,8 @@ void json_to_integration(json_t *json, struct integration *integration)
 
 void json_to_integration_account(json_t *json, struct integration_account *integration_account)
 {
-	integration_account->id = json_string_value(json_object_get(json, "id"));
-	integration_account->name = json_string_value(json_object_get(json, "name"));
+	integration_account->id = json_strcpy(json_object_get(json, "id"));
+	integration_account->name = json_strcpy(json_object_get(json, "name"));
 }
 
 
@@ -564,7 +635,7 @@ void json_to_ban(json_t *json, struct ban *ban)
 {
 	json_t *buf;
 
-	ban->reason = json_string_value(json_object_get(json, "reason"));
+	ban->reason = json_strcpy(json_object_get(json, "reason"));
 
 	if((buf = json_object_get(json, "user")) != NULL)
 	{
@@ -580,7 +651,7 @@ void jsont_to_invite(json_t *json, struct invite *invite)
 {
 	json_t *buf;
 
-	invite->code = json_string_value(json_object_get(json, "code"));
+	invite->code = json_strcpy(json_object_get(json, "code"));
 
 	if((buf = json_object_get(json, "guild")) != NULL)
 	{
@@ -631,9 +702,9 @@ void json_to_invite_meta(json_t *json, struct invite_meta *invite_meta)
 void json_to_user(json_t *json, struct user *user)
 {
 	user->id = json_integer_value(json_object_get(json, "id"));
-	user->username = json_string_value(json_object_get(json, "username"));
-	user->discriminator = json_string_value(json_object_get(json, "discriminator"));
-	user->avatar = json_string_value(json_object_get(json, "avatar"));
+	user->username = json_strcpy(json_object_get(json, "username"));
+	user->discriminator = json_strcpy(json_object_get(json, "discriminator"));
+	user->avatar = json_strcpy(json_object_get(json, "avatar"));
 
 	if(json_is_true(json_object_get(json, "bot")))
 		user->bot = true;
@@ -641,12 +712,12 @@ void json_to_user(json_t *json, struct user *user)
 	if(json_is_true(json_object_get(json, "mfa_enabled")))
 		user->mfa_enabled = true;
 	
-	user->locale = json_string_value(json_object_get(json, "locale"));
+	user->locale = json_strcpy(json_object_get(json, "locale"));
 	
 	if(json_is_true(json_object_get(json, "verified")))
 		user->verified = true;
 	
-	user->email = json_string_value(json_object_get(json, "email"));
+	user->email = json_strcpy(json_object_get(json, "email"));
 	user->flags = json_integer_value(json_object_get(json, "flags"));
 	
 	if(json_is_true(json_object_get(json, "premium_type")))
@@ -670,7 +741,7 @@ void json_to_voice_state(json_t *json, struct voice_state *voice_state)
 		json_to_member(buf, voice_state->member);
 	}
 
-	voice_state->session_id = json_string_value(json_object_get(json, "session_id"));
+	voice_state->session_id = json_strcpy(json_object_get(json, "session_id"));
 	
 	if(json_is_true(json_object_get(json, "deaf")))
 		voice_state->deaf = true;
@@ -690,8 +761,8 @@ void json_to_voice_state(json_t *json, struct voice_state *voice_state)
 
 void json_to_voice_region(json_t *json, struct voice_region *voice_region)
 {
-	voice_region->id = json_string_value(json_object_get(json, "id"));
-	voice_region->name = json_string_value(json_object_get(json, "name"));
+	voice_region->id = json_strcpy(json_object_get(json, "id"));
+	voice_region->name = json_strcpy(json_object_get(json, "name"));
 
 	if(json_is_true(json_object_get(json, "vip")))
 		voice_region->vip = true;
@@ -724,7 +795,7 @@ void json_to_webhook(json_t *json, struct webhook *webhook)
 		json_to_user(buf, webhook->user);
 	}
 
-	webhook->name = json_string_value(json_object_get(json, "name"));
-	webhook->avatar = json_string_value(json_object_get(json, "avatar"));
-	webhook->token = json_string_value(json_object_get(json, "token"));
+	webhook->name = json_strcpy(json_object_get(json, "name"));
+	webhook->avatar = json_strcpy(json_object_get(json, "avatar"));
+	webhook->token = json_strcpy(json_object_get(json, "token"));
 }

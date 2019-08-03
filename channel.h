@@ -46,8 +46,8 @@ struct channel
 	unsigned char position;
 	size_t overwrite_count;
 	struct overwrite **overwrites;
-	const char *name;
-	const char *topic;
+	char *name;
+	char *topic;
 	bool nsfw;
 	unsigned long long last_message_id;
 	unsigned int bitrate;
@@ -55,7 +55,7 @@ struct channel
 	unsigned char rate_limit;
 	size_t recipient_count;
 	struct user **recipients;
-	const char *icon;
+	char *icon;
 	unsigned long long owner_id;
 	unsigned long long application_id;
 	unsigned long long parent_id;
@@ -70,7 +70,7 @@ struct message
 	unsigned long long guild_id;
 	struct user *author;
 	struct member *member;
-	const char *content;
+	char *content;
 	struct tm *timestamp;
 	struct tm *edited_timestamp;
 	bool tts;
@@ -103,7 +103,7 @@ struct mention
 struct reaction
 {
 	unsigned int count;
-	unsigned char me;
+	bool me;
 	struct emoji *emoji;
 };
 
@@ -118,24 +118,24 @@ struct overwrite
 struct application
 {
 	unsigned long long id;
-	const char *cover_image;
-	const char *description;
-	const char *icon;
-	const char *name;
+	char *cover_image;
+	char *description;
+	char *icon;
+	char *name;
 };
 
 struct activity
 {
 	enum activity_type type;
-	const char *party_id;
+	char *party_id;
 };
 
 struct embed
 {
-	const char *title;
-	const char *type;
-	const char *description;
-	const char *url;
+	char *title;
+	char *type;
+	char *description;
+	char *url;
 	struct tm *timestamp;
 	int color;
 	struct embed_footer *footer;
@@ -144,69 +144,86 @@ struct embed
 	struct embed_video *video;
 	struct embed_provider *provider;
 	struct embed_author *author;
-	struct embed_fields *fields;
+	size_t field_count;
+	struct embed_field **fields;
 };
 
 struct embed_thumbnail
 {
-	const char *url;
-	const char *proxy_url;
+	char *url;
+	char *proxy_url;
 	unsigned int height;
-	unsigned width;
+	unsigned int width;
 };
 
 struct embed_video
 {
-	const char *url;
+	char *url;
 	unsigned int height;
 	unsigned int width;
 };
 
 struct embed_image
 {
-	const char *url;
-	const char *proxy_url;
+	char *url;
+	char *proxy_url;
 	unsigned int height;
 	unsigned int width;
 };
 
 struct embed_provider
 {
-	const char *name;
-	const char *url;
+	char *name;
+	char *url;
 };
 
 struct embed_author
 {
-	const char *name;
-	const char *url;
-	const char *icon_url;
-	const char *proxy_icon_url;
+	char *name;
+	char *url;
+	char *icon_url;
+	char *proxy_icon_url;
 };
 
 struct embed_footer
 {
-	const char *text;
-	const char *icon_url;
-	const char *proxy_icon_url;
+	char *text;
+	char *icon_url;
+	char *proxy_icon_url;
 };
 
-struct embed_fields
+struct embed_field
 {
-	const char *name;
-	const char *value;
+	char *name;
+	char *value;
 	bool _inline;
 };
 
 struct attachment
 {
 	unsigned long long id;
-	const char *filename;
+	char *filename;
 	unsigned long long size;
-	const char *proxy_url;
+	char *proxy_url;
 	unsigned int height;
 	unsigned int width;
 };
+
+void channel_free(struct channel *channel);
+void message_free(struct message *message);
+void mention_free(struct mention *mention);
+void reaction_free(struct reaction *reaction);
+void application_free(struct application *application);
+void activity_free(struct activity *activity);
+void embed_free(struct embed *embed);
+void embed_thumbnail_free(struct embed_thumbnail *embed_thumbnail);
+void embed_video_free(struct embed_video *embed_video);
+void embed_image_free(struct embed_image *embed_image);
+void embed_provider_free(struct embed_provider *embed_provider);
+void embed_author_free(struct embed_author *embed_author);
+void embed_footer_free(struct embed_footer *embed_footer);
+void embed_field_free(struct embed_field *embed_field);
+void attachment_free(struct attachment *attachment);
 
 struct channel *get_channel(struct client *client, unsigned long long channel_id);
 int modify_channel(struct channel *channel);
